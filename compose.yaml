@@ -1,0 +1,30 @@
+# TUTORIAL 18 — local PostgreSQL for development/production parity.
+# Needs Docker Desktop (or colima). Start / stop:
+#   docker compose up -d
+#   docker compose down          (add -v to also wipe the data volume)
+# Then run the app against it:
+#   SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/bookshop \
+#   SPRING_DATASOURCE_USERNAME=bookshop \
+#   SPRING_DATASOURCE_PASSWORD=bookshop-local-pw \
+#   ./mvnw spring-boot:run
+# (Local-only credentials, obviously fake. Real ones live in the
+#  deployment environment, never in this file.)
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: bookshop
+      POSTGRES_USER: bookshop
+      POSTGRES_PASSWORD: bookshop-local-pw
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookshop"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:
