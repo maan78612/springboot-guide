@@ -185,5 +185,5 @@ graph-walking.
   vanish; matches the Node reference exactly.
 - Unknown inbound JSON fields bind to nothing and vanish — by design.
 
-Next: **Tutorial 08 — Validation**: `@Valid`, the constraint
+Next: [**Tutorial 08 — Validation**](tutorial-08%20%28Validation%29.md): `@Valid`, the constraint
 annotations, and stopping `{"title":"","price":-5}` at the door.

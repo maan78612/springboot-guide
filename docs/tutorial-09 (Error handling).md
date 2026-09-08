@@ -169,7 +169,7 @@ important line in the file.
 - Every failure now answers `{"success":false, "message", errors?}` —
   same envelope family as every success.
 
-Next: **Tutorial 10 — Relationships and queries**: Author and Genre
+Next: [**Tutorial 10 — Relationships and queries**](tutorial-10%20%28Relationships%20and%20queries%29.md): Author and Genre
 entities, OneToMany / ManyToMany, the N+1 problem caught in the SQL
 log, derived queries, @Query, and pagination + whitelisted
 search/filter/sort with `meta`.

@@ -180,7 +180,7 @@ Two smells, each getting its own tutorial:
   to status codes.
 - Forgotten `@RequestBody` = all-null object saved with a 201. Silent.
 
-Next: **Tutorial 07 — DTOs and the response envelope**: why entities
+Next: [**Tutorial 07 — DTOs and the response envelope**](tutorial-07%20%28DTOs%20and%20the%20response%20envelope%29.md): why entities
 must not cross the API boundary, and the
 `{success, message, data, meta}` shape every response will use from
 now on.

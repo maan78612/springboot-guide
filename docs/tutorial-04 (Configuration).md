@@ -247,5 +247,5 @@ signing key in tutorial 15, and it will follow these rules.
   a misnamed profile file fails silently.
 - Secrets never enter git. Env vars are the front door.
 
-Next: **Tutorial 05 — Database and JPA**: H2, @Entity, JpaRepository,
+Next: [**Tutorial 05 — Database and JPA**](tutorial-05%20%28Database%20and%20JPA%29.md): H2, @Entity, JpaRepository,
 and watching the SQL Spring generates.

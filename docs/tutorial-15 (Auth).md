@@ -211,6 +211,6 @@ Suite: 11 tests, 0 failures.
   keep the envelope consistent.
 - First admin comes from config via a seeder, idempotently.
 
-Next: **Tutorial 16 — Roles and hardening**: admin-only endpoints,
+Next: [**Tutorial 16 — Roles and hardening**](tutorial-16%20%28Roles%20and%20hardening%29.md): admin-only endpoints,
 sellers owning their books, CORS, rate limiting, and security
 headers.

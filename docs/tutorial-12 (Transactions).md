@@ -173,6 +173,6 @@ all of ours are.
   lazy touch after session close.
 - Annotations live on proxies: self-calls bypass them.
 
-Next: **Tutorial 13 — Testing**: Mockito unit tests for the rules we
+Next: [**Tutorial 13 — Testing**](tutorial-13%20%28Testing%29.md): Mockito unit tests for the rules we
 just wrote, @WebMvcTest for the web layer, @SpringBootTest for the
 whole thing.

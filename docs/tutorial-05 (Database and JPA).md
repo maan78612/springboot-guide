@@ -232,5 +232,5 @@ one.)
 - `show-sql` + the H2 console let you SEE what JPA actually does.
   Trust the log, not your assumption.
 
-Next: **Tutorial 06 — A full CRUD API**: POST, PUT, DELETE,
+Next: [**Tutorial 06 — A full CRUD API**](tutorial-06%20%28Full%20CRUD%20API%29.md): POST, PUT, DELETE,
 @PathVariable, @RequestBody, and the right status code for each case.

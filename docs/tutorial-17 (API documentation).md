@@ -119,5 +119,5 @@ not hand strangers a map. Either is fine — decide, don't default.
 - New URLs (even library-added ones) are born protected — open docs
   deliberately in dev, and decide explicitly for prod.
 
-Next: **Tutorial 18 — A real database**: Postgres and Flyway
+Next: [**Tutorial 18 — A real database**](tutorial-18%20%28A%20real%20database%29.md): Postgres and Flyway
 migrations, and why create-drop + data.sql retire.

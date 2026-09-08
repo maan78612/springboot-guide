@@ -147,5 +147,5 @@ header.
 - The Dockerfile is those same verified steps, containerized:
   multi-stage, cached deps, non-root.
 
-Next: **Tutorial 20 — The template**: turning this project into the
+Next: [**Tutorial 20 — The template**](tutorial-20%20%28The%20template%29.md): turning this project into the
 starter you copy for every new backend, git history included.

@@ -377,5 +377,5 @@ Fix: `chmod +x mvnw`.
 - `./mvnw spring-boot:run` starts the app; port 8080; Ctrl+C stops it.
 - Devtools restarts the app in ~0.07 s whenever classes recompile.
 
-Next: **Tutorial 02 — First endpoint.** We make `GET /books` return
+Next: [**Tutorial 02 — First endpoint.**](tutorial-02%20%28First%20endpoint%29.md) We make `GET /books` return
 real JSON and follow a Java object on its way out the door.

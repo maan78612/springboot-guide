@@ -299,5 +299,5 @@ POST {"genreIds": [42]}:
 - Clients send ids in, get flattened summaries out; meta completes
   the envelope.
 
-Next: **Tutorial 11 — Soft delete**: stop losing data on DELETE,
+Next: [**Tutorial 11 — Soft delete**](tutorial-11%20%28Soft%20delete%29.md): stop losing data on DELETE,
 with Hibernate's built-in @SoftDelete — and a restore endpoint.

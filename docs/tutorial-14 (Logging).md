@@ -156,6 +156,6 @@ kept for months. Rules:
 - No secrets, no unnecessary personal data, exceptions logged once
   with their stack.
 
-Next: **Tutorial 15 — Auth**: Spring Security's locked-down
+Next: [**Tutorial 15 — Auth**](tutorial-15%20%28Auth%29.md): Spring Security's locked-down
 defaults, password hashing with BCrypt, register/login endpoints,
 JWT tokens, and seeding the first admin.

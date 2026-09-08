@@ -159,6 +159,6 @@ shape, service checks meaning.
 - The default 400 body is unusable for clients — fixing that shape
   is next.
 
-Next: **Tutorial 09 — Error handling**: custom exceptions,
+Next: [**Tutorial 09 — Error handling**](tutorial-09%20%28Error%20handling%29.md): custom exceptions,
 @RestControllerAdvice, and one `{"success":false}` error shape for
 the whole API.

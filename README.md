@@ -87,26 +87,26 @@ Required environment (prod refuses to start without the first four):
 
 | #  | File in docs/ | Covers |
 |----|------|--------|
-| 01 | tutorial-01 (Setup) | what Spring Boot is, the generated files, pom.xml, running, dev reload |
-| 02 | tutorial-02 (First endpoint) | @RestController, JSON out, /api/v1 |
-| 03 | tutorial-03 (Layers and dependency injection) | beans, the container, constructor injection |
-| 04 | tutorial-04 (Configuration) | properties, profiles, @ConfigurationProperties, fail-fast, secrets |
-| 05 | tutorial-05 (Database and JPA) | H2, @Entity, JpaRepository, seeing the SQL |
-| 06 | tutorial-06 (Full CRUD API) | verbs, @PathVariable, @RequestBody, status codes |
-| 07 | tutorial-07 (DTOs and the response envelope) | records, mapping, the envelope |
-| 08 | tutorial-08 (Validation) | @Valid, constraints, field errors |
-| 09 | tutorial-09 (Error handling) | ApiException, @RestControllerAdvice, one error shape |
-| 10 | tutorial-10 (Relationships and queries) | OneToMany/ManyToMany, N+1, derived queries, @Query, query features |
-| 11 | tutorial-11 (Soft delete) | @SoftDelete, restore, native-query escape hatches |
-| 12 | tutorial-12 (Transactions) | @Transactional, rollback rules, lazy traps |
-| 13 | tutorial-13 (Testing) | Mockito, @WebMvcTest, @SpringBootTest |
-| 14 | tutorial-14 (Logging) | SLF4J, levels, dev-pretty vs prod-JSON |
-| 15 | tutorial-15 (Auth) | security defaults, BCrypt, JWT, seed admin |
-| 16 | tutorial-16 (Roles and hardening) | roles, ownership, CORS, rate limit, headers |
-| 17 | tutorial-17 (API documentation) | OpenAPI, Swagger UI, Postman |
-| 18 | tutorial-18 (A real database) | Postgres, Flyway, dev/prod parity |
-| 19 | tutorial-19 (Production basics) | Actuator, jar, Dockerfile, env config, graceful shutdown |
-| 20 | tutorial-20 (The template) | using this repo as your starter |
+| 01 | [tutorial-01 (Setup)](docs/tutorial-01%20%28Setup%29.md) | what Spring Boot is, the generated files, pom.xml, running, dev reload |
+| 02 | [tutorial-02 (First endpoint)](docs/tutorial-02%20%28First%20endpoint%29.md) | @RestController, JSON out, /api/v1 |
+| 03 | [tutorial-03 (Layers and dependency injection)](docs/tutorial-03%20%28Layers%20and%20dependency%20injection%29.md) | beans, the container, constructor injection |
+| 04 | [tutorial-04 (Configuration)](docs/tutorial-04%20%28Configuration%29.md) | properties, profiles, @ConfigurationProperties, fail-fast, secrets |
+| 05 | [tutorial-05 (Database and JPA)](docs/tutorial-05%20%28Database%20and%20JPA%29.md) | H2, @Entity, JpaRepository, seeing the SQL |
+| 06 | [tutorial-06 (Full CRUD API)](docs/tutorial-06%20%28Full%20CRUD%20API%29.md) | verbs, @PathVariable, @RequestBody, status codes |
+| 07 | [tutorial-07 (DTOs and the response envelope)](docs/tutorial-07%20%28DTOs%20and%20the%20response%20envelope%29.md) | records, mapping, the envelope |
+| 08 | [tutorial-08 (Validation)](docs/tutorial-08%20%28Validation%29.md) | @Valid, constraints, field errors |
+| 09 | [tutorial-09 (Error handling)](docs/tutorial-09%20%28Error%20handling%29.md) | ApiException, @RestControllerAdvice, one error shape |
+| 10 | [tutorial-10 (Relationships and queries)](docs/tutorial-10%20%28Relationships%20and%20queries%29.md) | OneToMany/ManyToMany, N+1, derived queries, @Query, query features |
+| 11 | [tutorial-11 (Soft delete)](docs/tutorial-11%20%28Soft%20delete%29.md) | @SoftDelete, restore, native-query escape hatches |
+| 12 | [tutorial-12 (Transactions)](docs/tutorial-12%20%28Transactions%29.md) | @Transactional, rollback rules, lazy traps |
+| 13 | [tutorial-13 (Testing)](docs/tutorial-13%20%28Testing%29.md) | Mockito, @WebMvcTest, @SpringBootTest |
+| 14 | [tutorial-14 (Logging)](docs/tutorial-14%20%28Logging%29.md) | SLF4J, levels, dev-pretty vs prod-JSON |
+| 15 | [tutorial-15 (Auth)](docs/tutorial-15%20%28Auth%29.md) | security defaults, BCrypt, JWT, seed admin |
+| 16 | [tutorial-16 (Roles and hardening)](docs/tutorial-16%20%28Roles%20and%20hardening%29.md) | roles, ownership, CORS, rate limit, headers |
+| 17 | [tutorial-17 (API documentation)](docs/tutorial-17%20%28API%20documentation%29.md) | OpenAPI, Swagger UI, Postman |
+| 18 | [tutorial-18 (A real database)](docs/tutorial-18%20%28A%20real%20database%29.md) | Postgres, Flyway, dev/prod parity |
+| 19 | [tutorial-19 (Production basics)](docs/tutorial-19%20%28Production%20basics%29.md) | Actuator, jar, Dockerfile, env config, graceful shutdown |
+| 20 | [tutorial-20 (The template)](docs/tutorial-20%20%28The%20template%29.md) | using this repo as your starter |
 
 Every claim in the docs was verified by running it; error messages
 shown are real output.
@@ -126,5 +126,5 @@ each `.java` file, using Better Comments markers:
 
 ## Using this as a template
 
-See `docs/tutorial-20 (The template).md` — clone, rename, re-package,
+See [tutorial-20 (The template)](docs/tutorial-20%20%28The%20template%29.md) — clone, rename, re-package,
 `git init`, go.

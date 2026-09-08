@@ -157,4 +157,4 @@ gets the same 404 you saw in tutorial 1. The path must match the
 - The hardcoded list inside the controller is deliberately wrong —
   a controller should hold no data. Next tutorial fixes exactly that.
 
-Next: **Tutorial 03 — Layers and dependency injection.**
+Next: [**Tutorial 03 — Layers and dependency injection.**](tutorial-03%20%28Layers%20and%20dependency%20injection%29.md)

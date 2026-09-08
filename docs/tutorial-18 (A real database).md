@@ -167,6 +167,6 @@ database has personality — H2 is forgiving, Postgres is precise.
   through environment variables; prod has no fallbacks.
 - Real-database testing found a real bug the friendly database hid.
 
-Next: **Tutorial 19 — Production basics**: Actuator health checks,
+Next: [**Tutorial 19 — Production basics**](tutorial-19%20%28Production%20basics%29.md): Actuator health checks,
 building the jar, a Dockerfile, graceful shutdown, and configuration
 through environment variables.

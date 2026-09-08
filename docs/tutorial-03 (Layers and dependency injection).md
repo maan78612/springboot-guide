@@ -192,6 +192,6 @@ a failed hot reload — just fix and save.
 - "required a bean ... could not be found" = the class you want
   isn't a bean (missing annotation or outside the scanned package).
 
-Next: **Tutorial 04 — Configuration**: application.properties,
+Next: [**Tutorial 04 — Configuration**](tutorial-04%20%28Configuration%29.md): application.properties,
 profiles, @Value, @ConfigurationProperties, and where secrets do NOT
 go.

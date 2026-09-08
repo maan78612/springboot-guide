@@ -192,5 +192,5 @@ arrive over HTTPS, which is tutorial 19 territory (behind a proxy).
 - CORS whitelists browser origins from config; headers come secure
   by default.
 
-Next: **Tutorial 17 — API documentation**: OpenAPI, Swagger UI, and
+Next: [**Tutorial 17 — API documentation**](tutorial-17%20%28API%20documentation%29.md): OpenAPI, Swagger UI, and
 importing the spec into Postman.

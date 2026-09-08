@@ -147,6 +147,6 @@ Refactoring ['Programming', 'Software Design']
 - Restore = every write it takes to undo the delete, in ONE
   transaction.
 
-Next: **Tutorial 12 — Transactions**: what @Transactional really
+Next: [**Tutorial 12 — Transactions**](tutorial-12%20%28Transactions%29.md): what @Transactional really
 does, when a rollback happens (verified with a deliberate crash),
 and the lazy-loading trap.

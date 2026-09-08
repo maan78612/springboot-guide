@@ -211,5 +211,5 @@ load its context, the missing `@MockitoBean` is suspect number one.
 - `./mvnw test` runs with assertions enabled — sometimes stricter
   than production, and that is a gift.
 
-Next: **Tutorial 14 — Logging**: SLF4J, levels, dev-pretty vs
+Next: [**Tutorial 14 — Logging**](tutorial-14%20%28Logging%29.md): SLF4J, levels, dev-pretty vs
 prod-JSON output, and what must never be logged.
