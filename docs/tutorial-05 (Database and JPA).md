@@ -153,19 +153,3 @@ By the end of this tutorial, you should understand:
 - how SQL appears in the logs
 
 Next: [**Tutorial 06 — Full CRUD API**](tutorial-06%20%28Full%20CRUD%20API%29.md)
-one.)
-
-## 8. Recap
-
-- JPA = the standard, Hibernate = the engine, Spring Data = writes
-  the repository, H2 = throwaway in-memory database for dev.
-- `@Entity` + `@Id` + `@GeneratedValue` map class ↔ table; the
-  database owns ids; entities need a no-arg constructor.
-- `JpaRepository<Book, Long>` gives CRUD methods with zero code.
-- `data.sql` seeds; `defer-datasource-initialization` fixes the
-  timing; never insert explicit ids into an identity column.
-- `show-sql` + the H2 console let you SEE what JPA actually does.
-  Trust the log, not your assumption.
-
-Next: [**Tutorial 06 — A full CRUD API**](tutorial-06%20%28Full%20CRUD%20API%29.md): POST, PUT, DELETE,
-@PathVariable, @RequestBody, and the right status code for each case.
