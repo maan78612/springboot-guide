@@ -1,7 +1,32 @@
 /*
  ^ TUTORIAL 02 — A plain object that will travel as JSON
- ? Jackson builds JSON from public getters. No getters -> {} silently.
- ? Money is BigDecimal, never double.
+ ? Jackson is a library that converts Java objects to JSON (and
+ ?   JSON back to Java objects). Spring Boot includes it for you.
+ ?   When a controller returns a Book, Jackson turns it into JSON
+ ?   before it is sent to the client.
+ ?
+ ? In Java, fields are usually private and read through public
+ ?   getters. This is the normal Java way.
+ ?
+ ? Jackson turns this object into JSON using those getters.
+ ?   Example:
+ ?     private String title = "Effective Java";
+ ?     public String getTitle() { return title; }
+ ?   JSON:
+ ?     {"title": "Effective Java"}
+ ?
+ ? The JSON name comes from the getter's name, not the field's.
+ ?   Example:
+ ?     public String getTitleeeee() { return title; }
+ ?   JSON:
+ ?     {"titleeeee": "Effective Java"}
+ ?
+ ! If a getter is not public, Jackson can't see it, and that
+ !   field is missing from the JSON. There is no error.
+ !   Example:
+ !     String getTitle() { return title; }   // no "public"
+ !   JSON:
+ !     {}
 
  ^ TUTORIAL 05 — the same class, now a database row
  ? @Entity: one object = one row. @Id: primary key.
