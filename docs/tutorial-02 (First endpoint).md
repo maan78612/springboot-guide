@@ -24,9 +24,49 @@ matching request arrives. (The restaurant kitchen calling the chef.)
 
 ## 2. The two new files
 
-**`model/Book.java`** — a plain Java class: four private fields
-(`id`, `title`, `author`, `price`), a constructor, four getters.
-Nothing from Spring in it. Two choices worth explaining:
+### `model/Book.java`
+
+A plain Java class: four private fields, a constructor, four getters.
+Nothing from Spring in it.
+
+```java
+package com.example.bookshop.model;
+
+import java.math.BigDecimal;
+
+public class Book {
+
+    private Long id;
+    private String title;
+    private String author;
+    private BigDecimal price;
+
+    public Book(Long id, String title, String author, BigDecimal price) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.price = price;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+}
+```
+
+Two choices worth explaining:
 
 - `price` is a `BigDecimal`, not `double`. Binary floating point
   cannot store `0.10` exactly, and money errors compound. Money is
@@ -34,9 +74,27 @@ Nothing from Spring in it. Two choices worth explaining:
 - `author` is plain text for now. It becomes a real `Author` object
   with its own table in tutorial 10.
 
-**`controller/BookController.java`** — the endpoint:
+> **Note:** the `Book.java` in the repo has grown since this stage
+> (JPA annotations, relationships, soft delete, ownership). That's
+> expected — later tutorials add to it step by step. For now, type
+> the version above.
+
+### `controller/BookController.java`
+
+The endpoint:
 
 ```java
+package com.example.bookshop.controller;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.bookshop.model.Book;
+
 @RestController
 @RequestMapping("/api/v1/books")
 public class BookController {
@@ -45,7 +103,8 @@ public class BookController {
     public List<Book> getAllBooks() {
         return List.of(
                 new Book(1L, "Effective Java", "Joshua Bloch", new BigDecimal("54.99")),
-                ...);
+                new Book(2L, "Clean Code", "Robert C. Martin", new BigDecimal("42.50")),
+                new Book(3L, "The Pragmatic Programmer", "Andrew Hunt", new BigDecimal("49.95")));
     }
 }
 ```
@@ -126,7 +185,15 @@ this tutorial's common mistake.
 ## 5. The common mistake — no public getters
 
 I removed `public` from the four getters and called the endpoint
-again. What actually happened:
+again:
+
+```java
+Long getId() {          // was: public Long getId()
+    return id;
+}
+```
+
+What actually happened:
 
 ```
 HTTP 200
