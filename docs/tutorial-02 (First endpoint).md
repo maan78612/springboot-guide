@@ -145,12 +145,3 @@ By the end of this tutorial, you should understand:
 - how `@RestController`, `@RequestMapping`, and `@GetMapping` work together
 
 Next: [**Tutorial 03 — Layers and dependency injection.**](tutorial-03%20%28Layers%20and%20dependency%20injection%29.md)
-
-- `@RestController` means "return values are the JSON body".
-- Jackson converts objects to JSON using public getters. No getters →
-  silent `{}`.
-- Money is `BigDecimal`. Always.
-- The hardcoded list inside the controller is deliberately wrong —
-  a controller should hold no data. Next tutorial fixes exactly that.
-
-Next: [**Tutorial 03 — Layers and dependency injection.**](tutorial-03%20%28Layers%20and%20dependency%20injection%29.md)
