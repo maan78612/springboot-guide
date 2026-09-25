@@ -1,6 +1,6 @@
 # Tutorial 04 — Configuration
 
-Keep configuration outside the code and make the app behave differently in dev and prod.
+Move config out of code and into Spring properties files.
 
 Files for this stage:
 
@@ -13,67 +13,121 @@ Files for this stage:
 
 ---
 
-## 1. Put config in properties files
-
-Instead of hardcoding values, keep them in `application.properties`:
+## 1. Base config: application.properties
 
 ```properties
+spring.application.name=bookshop
+
+# ── Our own settings (the "bookshop." prefix is ours) ──────────────
 bookshop.shop-name=Bookshop
 bookshop.currency=USD
+bookshop.catalog.default-page-size=10
 bookshop.catalog.max-page-size=100
+
+# ── Security (tutorial 15) ─────────────────────────────────────────
+bookshop.security.jwt-secret=dev-only-signing-key-0123456789abcdef-not-a-secret
+bookshop.security.token-ttl-minutes=60
+
+# ── Database (tutorial 18) ─────────────────────────────────────────
+spring.jpa.hibernate.ddl-auto=validate
 ```
 
-This lets the same app run with different values in different environments.
+This file holds the base default values for the app.
 
-## 2. Read values with @Value
+## 2. Dev overrides: application-dev.properties
 
-Simple case:
+```properties
+# Loaded ON TOP of application.properties when the "dev" profile is
+# active. Keys here win over the same keys there.
+bookshop.shop-name=Bookshop (dev)
 
-```java
-@Value("${bookshop.currency}")
-private String currency;
+# See every SQL statement Hibernate runs (dev only - too noisy for prod)
+spring.jpa.show-sql=true
+
+# Browser UI for the in-memory database: http://localhost:8080/h2-console
+spring.h2.console.enabled=true
+
+# Fixed database name, so the console login URL is always
+# jdbc:h2:mem:bookshop (default is a random name per start)
+spring.datasource.url=jdbc:h2:mem:bookshop
+
+# ── Logging (tutorial 14) ──────────────────────────────────────────
+logging.level.com.example.bookshop=DEBUG
+logging.file.name=logs/bookshop.log
+
+# ── Actuator (tutorial 19) ─────────────────────────────────────────
+management.endpoint.health.show-details=always
+
+# ── First admin, dev only (tutorial 15) ────────────────────────────
+bookshop.admin.email=admin@bookshop.local
+bookshop.admin.password=admin-dev-password
 ```
 
-This pulls the value from the config at startup.
+This file is only used when the `dev` profile is active.
 
-For many settings, it is better to bind a whole group together.
+## 3. Prod overrides: application-prod.properties
 
-## 3. Read a whole config block with @ConfigurationProperties
+```properties
+# Loaded when the "prod" profile is active.
 
-```java
-@ConfigurationProperties(prefix = "bookshop")
-public class BookshopProperties {
+# ── Logging (tutorial 14) ──────────────────────────────────────────
+logging.structured.format.console=ecs
 
-    private String shopName;
-    private String currency;
+# ── Security (tutorial 15) ─────────────────────────────────────────
+bookshop.security.jwt-secret=${JWT_SECRET}
+bookshop.admin.email=${ADMIN_EMAIL:}
+bookshop.admin.password=${ADMIN_PASSWORD:}
 
-    public String getShopName() { return shopName; }
-    public void setShopName(String shopName) { this.shopName = shopName; }
+# ── API docs (tutorial 17) ─────────────────────────────────────────
+springdoc.api-docs.enabled=false
+springdoc.swagger-ui.enabled=false
 
-    public String getCurrency() { return currency; }
-    public void setCurrency(String currency) { this.currency = currency; }
-}
+# ── Database (tutorial 18) ─────────────────────────────────────────
+spring.datasource.url=${DB_URL}
+spring.datasource.username=${DB_USER}
+spring.datasource.password=${DB_PASSWORD}
+
+# ── Production behavior (tutorial 19) ──────────────────────────────
+server.shutdown=graceful
+spring.lifecycle.timeout-per-shutdown-phase=20s
 ```
 
-Then enable it in the app:
+This file is only used when the `prod` profile is active.
+
+## 4. Enable configuration scanning in the app
 
 ```java
+package com.example.bookshop;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class BookshopApplication {
+
     public static void main(String[] args) {
         SpringApplication.run(BookshopApplication.class, args);
     }
 }
 ```
 
-This is cleaner than reading each value separately.
+This tells Spring to scan for classes annotated with `@ConfigurationProperties`.
 
-## 4. Fail fast on bad config
-
-Add validation:
+## 5. Typed configuration: BookshopProperties.java
 
 ```java
+package com.example.bookshop.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
 @ConfigurationProperties(prefix = "bookshop")
 @Validated
 public class BookshopProperties {
@@ -83,64 +137,202 @@ public class BookshopProperties {
 
     @NotBlank
     private String currency;
+
+    @Valid
+    private final Catalog catalog = new Catalog();
+
+    @Valid
+    private final Security security = new Security();
+
+    private final Admin admin = new Admin();
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public void setShopName(String shopName) {
+        this.shopName = shopName;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public Catalog getCatalog() {
+        return catalog;
+    }
+
+    public Security getSecurity() {
+        return security;
+    }
+
+    public Admin getAdmin() {
+        return admin;
+    }
+
+    public static class Security {
+
+        @NotBlank
+        @jakarta.validation.constraints.Size(min = 32,
+                message = "jwt-secret must be at least 32 characters")
+        private String jwtSecret;
+
+        @Min(5)
+        private int tokenTtlMinutes = 60;
+
+        private java.util.List<String> corsAllowedOrigins =
+                java.util.List.of("http://localhost:3000");
+
+        @Min(1)
+        private int authRateLimitPerMinute = 10;
+
+        public String getJwtSecret() {
+            return jwtSecret;
+        }
+
+        public void setJwtSecret(String jwtSecret) {
+            this.jwtSecret = jwtSecret;
+        }
+
+        public int getTokenTtlMinutes() {
+            return tokenTtlMinutes;
+        }
+
+        public void setTokenTtlMinutes(int tokenTtlMinutes) {
+            this.tokenTtlMinutes = tokenTtlMinutes;
+        }
+
+        public java.util.List<String> getCorsAllowedOrigins() {
+            return corsAllowedOrigins;
+        }
+
+        public void setCorsAllowedOrigins(java.util.List<String> corsAllowedOrigins) {
+            this.corsAllowedOrigins = corsAllowedOrigins;
+        }
+
+        public int getAuthRateLimitPerMinute() {
+            return authRateLimitPerMinute;
+        }
+
+        public void setAuthRateLimitPerMinute(int authRateLimitPerMinute) {
+            this.authRateLimitPerMinute = authRateLimitPerMinute;
+        }
+    }
+
+    public static class Admin {
+
+        private String email = "";
+        private String password = "";
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+    }
+
+    public static class Catalog {
+
+        @Min(1)
+        private int defaultPageSize = 10;
+
+        @Min(1)
+        @Max(500)
+        private int maxPageSize = 100;
+
+        public int getDefaultPageSize() {
+            return defaultPageSize;
+        }
+
+        public void setDefaultPageSize(int defaultPageSize) {
+            this.defaultPageSize = defaultPageSize;
+        }
+
+        public int getMaxPageSize() {
+            return maxPageSize;
+        }
+
+        public void setMaxPageSize(int maxPageSize) {
+            this.maxPageSize = maxPageSize;
+        }
+    }
 }
 ```
 
-If the value is missing or invalid, the app fails at startup instead of failing later during requests.
+This binds all properties under the `bookshop` prefix into Java objects.
 
-## 5. Profiles: dev vs prod
+## 6. Use the config in the controller: ShopController.java
 
-Use different property files:
+```java
+package com.example.bookshop.controller;
 
-```text
-application.properties        # base config
-application-dev.properties     # dev overrides
-application-prod.properties    # prod overrides
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.bookshop.config.BookshopProperties;
+import com.example.bookshop.dto.ApiResponse;
+
+@RestController
+@RequestMapping("/api/v1/shop")
+public class ShopController {
+
+    private final BookshopProperties properties;
+
+    public ShopController(BookshopProperties properties) {
+        this.properties = properties;
+    }
+
+    @GetMapping
+    public ApiResponse<Map<String, String>> getShopInfo() {
+        return ApiResponse.ok("Shop info fetched", Map.of(
+                "name", properties.getShopName(),
+                "currency", properties.getCurrency()));
+    }
+}
 ```
 
-Activate a profile:
+The controller receives configuration through constructor injection.
 
-```bash
-SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
-```
+## 7. Why this matters
 
-This lets you change behavior without changing code.
+This tutorial is about making configuration:
 
-## 6. Environment variables override files
+- external to code
+- typed and validated
+- profile-aware
+- overridable by environment variables
 
-You can override config with environment variables:
+## 8. Common mistakes
 
-```bash
-BOOKSHOP_CURRENCY=EUR ./mvnw spring-boot:run
-```
+- wrong profile filename such as `application_dev.properties`
+- forgetting `@ConfigurationPropertiesScan`
+- using secrets directly in source-controlled files
+- misspelling a property key
 
-Spring automatically maps this to the property `bookshop.currency`.
-
-Order of precedence:
-
-1. `application.properties`
-2. profile-specific file
-3. environment variables
-4. command-line arguments
-
-## 7. Secrets must not live in source files
-
-Never put real secrets in `application.properties`.
-Use environment variables or secret managers in production.
-
-Examples:
-
-- DB passwords
-- JWT secret
-- API keys
-
-## 8. Goal for this tutorial
+## 9. Goal for this tutorial
 
 By the end of this tutorial, you should understand:
 
-- why config lives outside code
-- how `@ConfigurationProperties` works
-- how profiles switch behavior
+- how config is organized in Spring Boot
+- how the `bookshop.*` keys map into Java objects
+- how dev and prod profiles work
 - how environment variables override defaults
 
 Next: [**Tutorial 05 — Database and JPA**](tutorial-05%20%28Database%20and%20JPA%29.md)
