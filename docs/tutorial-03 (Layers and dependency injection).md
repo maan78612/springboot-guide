@@ -4,12 +4,13 @@ controller / service / repository, beans, the container, constructor
 injection, and why we never write `new` for our own layers.
 
 Files for this stage:
+
 - `repository/BookRepository.java` (new)
 - `service/BookService.java` (new)
 - `controller/BookController.java` (changed — the list moved out)
 
 The endpoint behaves exactly as before. This whole tutorial changes
-*structure*, not behavior. That is on purpose.
+_structure_, not behavior. That is on purpose.
 
 ---
 
@@ -49,7 +50,79 @@ ownership checks all land in services — and in tutorial 05 we swap
 the repository's insides for a real database and the service does not
 change by one character.
 
-## 2. Beans and the container
+## 2. The repository layer: what it is and why it exists
+
+A repository is the layer that knows how to load and save data. It is
+not the database itself, and it is not the controller. It is the
+boundary between the business code and storage.
+
+A very small, concept-only version looks like this:
+
+```java
+package com.example.bookshop.repository;
+
+import java.util.List;
+
+import com.example.bookshop.model.Book;
+
+public interface BookRepository {
+    List<Book> getAllBooks();
+}
+```
+
+Then the service depends on that interface instead of constructing
+anything itself:
+
+```java
+@Service
+public class BookService {
+
+    private final BookRepository bookRepository;
+
+    public BookService(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }
+
+    public List<Book> getAllBooks() {
+        return bookRepository.getAllBooks();
+    }
+}
+```
+
+And the controller simply asks the service for the result:
+
+```java
+@RestController
+@RequestMapping("/api/v1/books")
+public class BookController {
+
+    private final BookService bookService;
+
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
+    }
+
+    @GetMapping
+    public List<Book> getAllBooks() {
+        return bookService.getAllBooks();
+    }
+}
+```
+
+The important idea is: the service depends on a repository
+abstraction, not on a concrete storage implementation. Later, that
+repository can be backed by a HashMap, a database, or a Spring Data
+JPA implementation, and the service still does not change.
+
+This is the whole point of layers: the business logic stays stable
+while the storage mechanism can be swapped underneath it.
+
+In the real project, the repository eventually becomes a Spring Data
+JPA interface, which is why the file in `repository/BookRepository.java`
+looks larger and more advanced than this minimal example. The idea is
+the same; only the implementation detail becomes more powerful.
+
+## 3. Beans and the container
 
 > A **bean** is an object that Spring creates and manages for you.
 > The **container** (also "application context") is the registry
@@ -107,7 +180,7 @@ then service, then controller.
 **Why not `new BookRepository()` inside the service?**
 
 1. **Swap.** Tutorial 05 replaces the HashMap repository with a
-   database one. Because the service only *receives* a repository,
+   database one. Because the service only _receives_ a repository,
    it will not change at all.
 2. **Tests.** A test can construct `BookService` with a fake
    repository (tutorial 13). Impossible with a hard-wired `new`.
@@ -167,8 +240,8 @@ Consider defining a bean of type
 'com.example.bookshop.repository.BookRepository' in your configuration.
 ```
 
-Read it slowly once and it is actually a good message: *BookService's
-constructor wanted a BookRepository and the container had none.* The
+Read it slowly once and it is actually a good message: _BookService's
+constructor wanted a BookRepository and the container had none._ The
 two causes you will actually hit:
 
 1. The class is missing `@Repository`/`@Service`/`@Component`
