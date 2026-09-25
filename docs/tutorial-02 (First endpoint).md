@@ -3,6 +3,7 @@
 Create your first Spring Boot endpoint and return JSON.
 
 Files for this stage:
+
 - `src/main/java/com/example/bookshop/model/Book.java`
 - `src/main/java/com/example/bookshop/controller/BookController.java`
 
@@ -50,6 +51,7 @@ public class Book {
 ```
 
 Important:
+
 - use `BigDecimal` for money
 - keep the getters public, otherwise Jackson will not serialize the fields properly
 
@@ -82,6 +84,7 @@ public class BookController {
 ```
 
 What each annotation means:
+
 - `@RestController` → this class handles HTTP and returns JSON
 - `@RequestMapping("/api/v1/books")` → base URL for this controller
 - `@GetMapping` → this method handles GET requests
@@ -102,8 +105,18 @@ You should get:
 
 ```json
 [
-  {"id":1,"title":"Effective Java","author":"Joshua Bloch","price":54.99},
-  {"id":2,"title":"Clean Code","author":"Robert C. Martin","price":42.50}
+  {
+    "id": 1,
+    "title": "Effective Java",
+    "author": "Joshua Bloch",
+    "price": 54.99
+  },
+  {
+    "id": 2,
+    "title": "Clean Code",
+    "author": "Robert C. Martin",
+    "price": 42.5
+  }
 ]
 ```
 
@@ -113,6 +126,7 @@ Spring uses Jackson to convert Java objects to JSON.
 It looks at the public getters and turns them into fields in the JSON response.
 
 Example:
+
 - `getTitle()` → `"title"`
 - `getPrice()` → `"price"`
 
@@ -125,11 +139,13 @@ Example:
 ## 6. Goal for this tutorial
 
 By the end of this tutorial, you should understand:
+
 - how a controller maps a URL
 - how a Java object becomes JSON
 - how `@RestController`, `@RequestMapping`, and `@GetMapping` work together
 
 Next: [**Tutorial 03 — Layers and dependency injection.**](tutorial-03%20%28Layers%20and%20dependency%20injection%29.md)
+
 - `@RestController` means "return values are the JSON body".
 - Jackson converts objects to JSON using public getters. No getters →
   silent `{}`.

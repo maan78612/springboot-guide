@@ -3,6 +3,7 @@
 Move the book list out of the controller and into proper layers.
 
 Files for this stage:
+
 - `src/main/java/com/example/bookshop/repository/BookRepository.java`
 - `src/main/java/com/example/bookshop/service/BookService.java`
 - `src/main/java/com/example/bookshop/controller/BookController.java`
@@ -69,6 +70,7 @@ public class BookService {
 ```
 
 This is the key idea:
+
 - the service declares what it needs
 - Spring injects it automatically
 
@@ -118,6 +120,7 @@ public BookService(BookRepository bookRepository) {
 ```
 
 Benefits:
+
 - clear dependencies
 - easier to test
 - no manual `new` calls for app layers
@@ -146,6 +149,7 @@ required a bean of type 'BookRepository' that could not be found
 ```
 
 then usually:
+
 - the class is missing a Spring annotation
 - the class is outside the scanned package
 - the dependency type does not match the bean
@@ -153,6 +157,7 @@ then usually:
 ## 8. Goal for this tutorial
 
 By the end of this tutorial, you should understand:
+
 - why controller/service/repository are separated
 - what dependency injection means
 - why constructor injection is used
