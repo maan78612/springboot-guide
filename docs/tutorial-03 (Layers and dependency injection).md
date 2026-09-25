@@ -1,62 +1,31 @@
 # Tutorial 03 — Layers and dependency injection
 
-controller / service / repository, beans, the container, constructor
-injection, and why we never write `new` for our own layers.
+Move the book list out of the controller and into proper layers.
 
 Files for this stage:
-
-- `repository/BookRepository.java` (new)
-- `service/BookService.java` (new)
-- `controller/BookController.java` (changed — the list moved out)
-
-The endpoint behaves exactly as before. This whole tutorial changes
-_structure_, not behavior. That is on purpose.
+- `src/main/java/com/example/bookshop/repository/BookRepository.java`
+- `src/main/java/com/example/bookshop/service/BookService.java`
+- `src/main/java/com/example/bookshop/controller/BookController.java`
 
 ---
 
-## 1. Why layers
+## 1. Separate the responsibilities
 
-Tutorial 02 ended with data hardcoded inside the controller. With ten
-endpoints that style becomes a controller that parses HTTP, enforces
-business rules, AND talks to storage — three reasons to change, one
-class. You know this smell from SOLID: single responsibility.
+The controller should only handle HTTP.
+The service should handle business logic.
+The repository should handle data access.
 
-The standard backend answer (your Node repo uses the same one:
-routes → controllers → services → models) is three layers:
+Flow:
 
-```
-+-------------+----------------------------------------------------+
-| Layer       | Its ONE job                                        |
-+-------------+----------------------------------------------------+
-| controller  | Speak HTTP. Read the request, call the service,    |
-|             | choose the status code. Nothing else.              |
-| service     | Business rules. "What does the bookshop DO."      |
-| repository  | Store and load data. Nothing else.                 |
-+-------------+----------------------------------------------------+
+```text
+controller -> service -> repository
 ```
 
-**Analogy.** Controller = waiter (talks to customers, carries orders,
-knows nothing about cooking). Service = kitchen (makes the real
-decisions). Repository = pantry (fetches ingredients; the kitchen
-does not care which supplier filled the shelves).
+This keeps the app easier to expand later.
 
-Requests flow one way: controller → service → repository. A
-controller never touches a repository directly, and lower layers
-never know the ones above them exist.
+## 2. Simple repository example
 
-Right now `BookService.getAllBooks()` just forwards one call, which
-looks pointless. The payoff comes soon: rules, transactions and
-ownership checks all land in services — and in tutorial 05 we swap
-the repository's insides for a real database and the service does not
-change by one character.
-
-## 2. The repository layer: what it is and why it exists
-
-A repository is the layer that knows how to load and save data. It is
-not the database itself, and it is not the controller. It is the
-boundary between the business code and storage.
-
-A very small, concept-only version looks like this:
+At this stage, the repository can be a simple interface.
 
 ```java
 package com.example.bookshop.repository;
@@ -70,10 +39,20 @@ public interface BookRepository {
 }
 ```
 
-Then the service depends on that interface instead of constructing
-anything itself:
+Later, this becomes a full JPA repository with real database methods.
+
+## 3. Service with constructor injection
 
 ```java
+package com.example.bookshop.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.example.bookshop.model.Book;
+import com.example.bookshop.repository.BookRepository;
+
 @Service
 public class BookService {
 
@@ -89,9 +68,24 @@ public class BookService {
 }
 ```
 
-And the controller simply asks the service for the result:
+This is the key idea:
+- the service declares what it needs
+- Spring injects it automatically
+
+## 4. Controller delegates to the service
 
 ```java
+package com.example.bookshop.controller;
+
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.bookshop.model.Book;
+import com.example.bookshop.service.BookService;
+
 @RestController
 @RequestMapping("/api/v1/books")
 public class BookController {
@@ -109,162 +103,59 @@ public class BookController {
 }
 ```
 
-The important idea is: the service depends on a repository
-abstraction, not on a concrete storage implementation. Later, that
-repository can be backed by a HashMap, a database, or a Spring Data
-JPA implementation, and the service still does not change.
+Now the controller is thin and focused on HTTP only.
 
-This is the whole point of layers: the business logic stays stable
-while the storage mechanism can be swapped underneath it.
+## 5. Why constructor injection is preferred
 
-In the real project, the repository eventually becomes a Spring Data
-JPA interface, which is why the file in `repository/BookRepository.java`
-looks larger and more advanced than this minimal example. The idea is
-the same; only the implementation detail becomes more powerful.
-
-## 3. Beans and the container
-
-> A **bean** is an object that Spring creates and manages for you.
-> The **container** (also "application context") is the registry
-> that holds all beans.
-
-Remember tutorial 1: at startup, `@SpringBootApplication` scans
-`com.example.bookshop` and below. Every class marked with
-`@Component` — or one of its role-specific aliases — becomes a bean:
-
-```
-+-----------------+---------------------------------------+
-| Annotation      | Meaning                               |
-+-----------------+---------------------------------------+
-| @Component      | generic "manage this class for me"    |
-| @Repository     | @Component that stores/loads data     |
-| @Service        | @Component that holds business logic  |
-| @RestController | @Component that answers HTTP          |
-+-----------------+---------------------------------------+
-```
-
-The last three ARE `@Component` underneath. The different names
-document intent (and unlock a few layer-specific extras later).
-
-One instance each: beans are **singletons** by default. Everyone who
-asks for `BookRepository` gets the same object. That's why its
-`books` map must not be `static` — the bean is already
-one-per-application.
-
-## 3. Dependency injection
-
-> **Dependency injection (DI):** a class does not build what it
-> needs. It declares needs as constructor parameters, and the
-> container hands them in.
-
-The whole pattern is three lines, repeated in service and controller:
+This pattern is used:
 
 ```java
-@Service
-public class BookService {
+private final BookRepository bookRepository;
 
-    private final BookRepository bookRepository;
-
-    public BookService(BookRepository bookRepository) {
-        this.bookRepository = bookRepository;
-    }
-    ...
+public BookService(BookRepository bookRepository) {
+    this.bookRepository = bookRepository;
 }
 ```
 
-While creating the `BookService` bean, Spring sees the constructor
-needs a `BookRepository`, finds that bean in the container, and
-passes it in. Order is worked out automatically: repository first,
-then service, then controller.
+Benefits:
+- clear dependencies
+- easier to test
+- no manual `new` calls for app layers
+- Spring wires the object automatically
 
-**Why not `new BookRepository()` inside the service?**
-
-1. **Swap.** Tutorial 05 replaces the HashMap repository with a
-   database one. Because the service only _receives_ a repository,
-   it will not change at all.
-2. **Tests.** A test can construct `BookService` with a fake
-   repository (tutorial 13). Impossible with a hard-wired `new`.
-3. **Sharing.** Beans are singletons. `new` creates private copies
-   with separate state — two copies of the book map would disagree.
-
-`new` is still fine for plain values (`new Book(...)`,
-`new BigDecimal(...)`). The rule of thumb: **layers are injected,
-data is `new`ed.**
-
-**Constructor injection specifics:**
-
-- The field is `final`, so the service can never exist half-built,
-  and its dependencies are visible in one place: the constructor.
-- No `@Autowired` needed — with exactly one constructor, Spring uses
-  it automatically.
-- Old tutorials show `@Autowired` on fields. That works but hides
-  dependencies, blocks `final`, and makes plain-Java testing painful.
-  Prefer the constructor. Always.
-
-## 4. Verify it
-
-With the app running (`./mvnw spring-boot:run`):
+## 6. Run it
 
 ```bash
-curl -s -w "\nHTTP %{http_code}\n" http://localhost:8080/api/v1/books
+./mvnw spring-boot:run
 ```
 
-Real output — identical to tutorial 02, which is the point:
+Then call:
 
-```
-[{"id":1,"title":"Effective Java","author":"Joshua Bloch","price":54.99},
- {"id":2,"title":"Clean Code","author":"Robert C. Martin","price":42.50},
- {"id":3,"title":"The Pragmatic Programmer","author":"Andrew Hunt","price":49.95}]
-HTTP 200
+```bash
+curl http://localhost:8080/api/v1/books
 ```
 
-## 5. The common mistake — asking for something that is not a bean
+The response should still be the same as in tutorial 02.
 
-I deleted `@Repository` from `BookRepository` and recompiled. The
-app failed to start with:
+## 7. Common error
 
-```
-***************************
-APPLICATION FAILED TO START
-***************************
+If you see:
 
-Description:
-
-Parameter 0 of constructor in com.example.bookshop.service.BookService
-required a bean of type 'com.example.bookshop.repository.BookRepository'
-that could not be found.
-
-Action:
-
-Consider defining a bean of type
-'com.example.bookshop.repository.BookRepository' in your configuration.
+```text
+required a bean of type 'BookRepository' that could not be found
 ```
 
-Read it slowly once and it is actually a good message: _BookService's
-constructor wanted a BookRepository and the container had none._ The
-two causes you will actually hit:
+then usually:
+- the class is missing a Spring annotation
+- the class is outside the scanned package
+- the dependency type does not match the bean
 
-1. The class is missing `@Repository`/`@Service`/`@Component`
-   (this repro).
-2. The class lives OUTSIDE the root package, so component scan never
-   saw it (the warning from tutorial 01).
+## 8. Goal for this tutorial
 
-Bonus fact, verified while doing this: devtools kept the broken app's
-process alive, and after I put `@Repository` back and recompiled, it
-restarted successfully on its own. You do not have to relaunch after
-a failed hot reload — just fix and save.
+By the end of this tutorial, you should understand:
+- why controller/service/repository are separated
+- what dependency injection means
+- why constructor injection is used
+- how Spring wires beans together
 
-## 6. Recap
-
-- Three layers, one job each; requests flow controller → service →
-  repository, never sideways or upward.
-- A bean = an object Spring builds and keeps; component scan +
-  `@Component`-family annotations decide what becomes one.
-- Declare dependencies as `final` constructor parameters and let the
-  container wire them. `new` layers nowhere; `new` data anywhere.
-- "required a bean ... could not be found" = the class you want
-  isn't a bean (missing annotation or outside the scanned package).
-
-Next: [**Tutorial 04 — Configuration**](tutorial-04%20%28Configuration%29.md): application.properties,
-profiles, @Value, @ConfigurationProperties, and where secrets do NOT
-go.
+Next: [**Tutorial 04 — Configuration**](tutorial-04%20%28Configuration%29.md)

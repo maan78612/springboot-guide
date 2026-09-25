@@ -1,7 +1,6 @@
 # Tutorial 02 — First endpoint
 
-@RestController, @GetMapping, how a Java object becomes JSON, and the
-/api/v1 prefix.
+Create your first Spring Boot endpoint and return JSON.
 
 Files for this stage:
 - `src/main/java/com/example/bookshop/model/Book.java`
@@ -9,24 +8,9 @@ Files for this stage:
 
 ---
 
-## 1. Why: what an endpoint is
+## 1. Create the model
 
-> An **endpoint** is one URL + one HTTP method that your API answers.
-> `GET /api/v1/books` ("give me the books") is an endpoint.
-> `POST /api/v1/books` ("create a book") would be a different one,
-> even though the URL is the same.
-
-In tutorial 1 every request got a 404, because the server was running
-but we had registered nothing. Registering an endpoint in Spring means:
-write a normal method, and put annotations on it that describe which
-requests it answers. You never call the method — Spring does, when a
-matching request arrives. (The restaurant kitchen calling the chef.)
-
-## 2. The two new files
-
-**`model/Book.java`** — a plain Java class: four private fields
-(`id`, `title`, `author`, `price`), a constructor, four getters.
-Nothing from Spring in it:
+`Book` is a plain Java class. It has fields and public getters so Jackson can convert it to JSON.
 
 ```java
 package com.example.bookshop.model;
@@ -65,17 +49,24 @@ public class Book {
 }
 ```
 
-Two choices worth explaining:
+Important:
+- use `BigDecimal` for money
+- keep the getters public, otherwise Jackson will not serialize the fields properly
 
-- `price` is a `BigDecimal`, not `double`. Binary floating point
-  cannot store `0.10` exactly, and money errors compound. Money is
-  always `BigDecimal` (or whole cents in a `long`), never `double`.
-- `author` is plain text for now. It becomes a real `Author` object
-  with its own table in tutorial 10.
-
-**`controller/BookController.java`** — the endpoint:
+## 2. Create the controller
 
 ```java
+package com.example.bookshop.controller;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.bookshop.model.Book;
+
 @RestController
 @RequestMapping("/api/v1/books")
 public class BookController {
@@ -84,140 +75,61 @@ public class BookController {
     public List<Book> getAllBooks() {
         return List.of(
                 new Book(1L, "Effective Java", "Joshua Bloch", new BigDecimal("54.99")),
-                ...);
+                new Book(2L, "Clean Code", "Robert C. Martin", new BigDecimal("42.50"))
+        );
     }
 }
 ```
 
-The three annotations:
+What each annotation means:
+- `@RestController` → this class handles HTTP and returns JSON
+- `@RequestMapping("/api/v1/books")` → base URL for this controller
+- `@GetMapping` → this method handles GET requests
 
-```
-+----------------------------+-------------------------------------------+
-| Annotation                 | What it tells Spring                      |
-+----------------------------+-------------------------------------------+
-| @RestController            | Create one instance of this class at      |
-|                            | startup and manage it. Whatever its       |
-|                            | methods return IS the response body       |
-|                            | (JSON) - not the name of an HTML page.    |
-| @RequestMapping("/api/     | Every method's URL starts with this       |
-|   v1/books")               | prefix.                                   |
-| @GetMapping                | Run this method for GET requests to that  |
-|                            | URL. (@PostMapping etc. exist - tut. 06)  |
-+----------------------------+-------------------------------------------+
-```
-
-In simple words:
-
-- **`@RestController`** — "This class handles web requests." Spring
-  creates the object for you (you never write `new BookController()`).
-  Whatever a method returns is sent back to the caller as JSON.
-  Return a `List<Book>`, and the caller gets a JSON array.
-- **`@RequestMapping("/api/v1/books")`** — the base URL for the whole
-  class. Every endpoint inside starts with `/api/v1/books`, so you
-  don't repeat it on each method.
-- **`@GetMapping`** — "Call this method when someone sends a GET
-  request to that URL." GET means "give me data." Other annotations
-  like `@PostMapping` handle other request types, such as creating
-  data.
-
-If you know Express in JS, it's the same idea:
-
-```js
-const router = express.Router();          // @RestController
-app.use('/api/v1/books', router);         // @RequestMapping("/api/v1/books")
-
-router.get('/', (req, res) => {           // @GetMapping
-  res.json(books);                        // return value → JSON
-});
-```
-
-The difference: in Express you wire it up yourself in code. In Spring
-you put annotations on the class and method, and Spring does the
-wiring.
-
-Why the `/api/v1` prefix on everything, forever:
-
-- `/api` separates the JSON API from other URLs (health checks, docs).
-- `/v1` is insurance: when a breaking change is unavoidable someday,
-  `/v2` can exist while old clients keep working on `/v1`.
-
-## 3. Run and test it
+## 3. Run the app
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Then in a second terminal:
+Then call:
 
 ```bash
-curl -i http://localhost:8080/api/v1/books
+curl http://localhost:8080/api/v1/books
 ```
 
-Real output:
+You should get:
 
-```
-HTTP/1.1 200
-Content-Type: application/json
-
-[{"id":1,"title":"Effective Java","author":"Joshua Bloch","price":54.99},
- {"id":2,"title":"Clean Code","author":"Robert C. Martin","price":42.50},
- {"id":3,"title":"The Pragmatic Programmer","author":"Andrew Hunt","price":49.95}]
+```json
+[
+  {"id":1,"title":"Effective Java","author":"Joshua Bloch","price":54.99},
+  {"id":2,"title":"Clean Code","author":"Robert C. Martin","price":42.50}
+]
 ```
 
-Anatomy of the URL you just called:
+## 4. Why it works
 
-```
-http://localhost:8080/api/v1/books
-+----+ +-------+ +--+ +----------+
-|      |         |    |
-|      |         |    the path. Spring matches it to a method.
-|      |         the port Tomcat listens on (tutorial 4 changes it)
-|      "this same machine"
-the protocol
-```
+Spring uses Jackson to convert Java objects to JSON.
+It looks at the public getters and turns them into fields in the JSON response.
 
-## 4. What happened to that object on the way out
+Example:
+- `getTitle()` → `"title"`
+- `getPrice()` → `"price"`
 
-Your method returned `List<Book>` — Java objects on the heap. curl
-received text. The converter in between is **Jackson**, a library the
-web starter brought along. For each object it:
+## 5. Common mistakes
 
-1. takes the object your method returned
-2. finds its **public getters** (`getId`, `getTitle`, ...)
-3. writes one JSON field per getter: `getTitle()` → `"title": ...`
-4. strips the `get` prefix and lowercases the first letter
+- wrong URL: `/books` instead of `/api/v1/books`
+- missing public getter
+- using `double` instead of `BigDecimal` for price
 
-So JSON is built from **getters, not fields**. The fields are private;
-Jackson never sees them (by default). This has a sharp edge, which is
-this tutorial's common mistake.
+## 6. Goal for this tutorial
 
-## 5. The common mistake — no public getters
+By the end of this tutorial, you should understand:
+- how a controller maps a URL
+- how a Java object becomes JSON
+- how `@RestController`, `@RequestMapping`, and `@GetMapping` work together
 
-I removed `public` from the four getters and called the endpoint
-again. What actually happened:
-
-```
-HTTP 200
-[{},{},{}]
-```
-
-Three books, all empty. **No error, no log line, HTTP 200.** Jackson
-found zero public getters, so each Book produced `{}`. This is the
-sneakiest failure so far: everything looks fine except the data is
-gone. Older Spring Boot versions threw a 500 error here; Boot 4 fails
-silently.
-
-If your JSON is missing one field (not all): check that specific
-getter — it is misspelled (`gettitle`), non-public, or absent.
-
-Second, smaller mistake: calling `/books` instead of `/api/v1/books`
-gets the same 404 you saw in tutorial 1. The path must match the
-`@RequestMapping` prefix + `@GetMapping` exactly.
-
-## 6. Recap
-
-- One endpoint = one URL + one method, declared with annotations on a
-  normal Java method that Spring calls for you.
+Next: [**Tutorial 03 — Layers and dependency injection.**](tutorial-03%20%28Layers%20and%20dependency%20injection%29.md)
 - `@RestController` means "return values are the JSON body".
 - Jackson converts objects to JSON using public getters. No getters →
   silent `{}`.
