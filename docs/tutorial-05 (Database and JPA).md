@@ -1,50 +1,40 @@
 # Tutorial 05 — Database and JPA
 
-H2, @Entity, @Id, JpaRepository, what Spring generates for you, and
-watching the SQL it runs.
+Move the app from in-memory lists to a real database-backed JPA layer.
 
 Files for this stage:
-- `pom.xml` (+ data-jpa starter, + h2, + spring-boot-h2console)
-- `model/Book.java` (became an @Entity)
-- `repository/BookRepository.java` (class → one-line interface)
-- `src/main/resources/data.sql` (new — seed rows)
-- `application.properties` and `application-dev.properties` (grew)
-
-`BookService` and `BookController` did not change by one character.
-That is tutorial 03 paying off.
+- `pom.xml`
+- `src/main/java/com/example/bookshop/model/Book.java`
+- `src/main/java/com/example/bookshop/repository/BookRepository.java`
+- `src/main/resources/data.sql`
+- `src/main/resources/application.properties`
+- `src/main/resources/application-dev.properties`
 
 ---
 
-## 1. The names, untangled first
+## 1. Add JPA and H2
 
-Four names show up around Java persistence and beginners mix them up:
+Add Spring Data JPA and H2 to the project:
 
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <scope>runtime</scope>
+</dependency>
 ```
-+-------------+------------------------------------------------------+
-| JPA         | A STANDARD (just interfaces/annotations): how Java   |
-|             | objects map to database rows. Like an interface.     |
-| Hibernate   | The most-used IMPLEMENTATION of JPA. Does the real   |
-|             | work: generates SQL, tracks objects. Like the class. |
-| Spring Data | A Spring layer ON TOP of JPA that writes the         |
-| JPA         | repository code for you.                             |
-| H2          | A tiny database written in Java that can live        |
-|             | IN MEMORY inside your app. Zero install.             |
-+-------------+------------------------------------------------------+
-```
 
-**Why H2 first instead of a real database:** it needs no
-installation, starts empty in milliseconds, and vanishes on shutdown.
-It is the Spring twin of your Node repo's `npm run dev:memory`
-(mongodb-memory-server): perfect for learning and tests, never for
-production. Postgres arrives in tutorial 18; today nothing needs
-installing.
+This gives you:
+- JPA mapping support
+- database repository generation
+- an in-memory H2 database for development
 
-You wrote JDBC by hand in your Java course: SQL strings,
-ResultSet loops, copying columns into objects. JPA's pitch is that
-the mapping (`row ↔ object`) is declared ONCE, on the class, and the
-SQL is generated.
-
-## 2. Book becomes an @Entity
+## 2. Turn Book into an entity
 
 ```java
 @Entity
@@ -60,164 +50,103 @@ public class Book {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
-    protected Book() { }          // for JPA only
+    protected Book() {
+    }
 
-    public Book(String title, String author, BigDecimal price) { ... }
+    public Book(String title, String author, BigDecimal price) {
+        this.title = title;
+        this.author = author;
+        this.price = price;
+    }
+}
 ```
 
-- `@Entity` — one object of this class = one row in a table.
-  Hibernate maps names automatically: class `Book` → table `book`,
-  field `title` → column `title` (camelCase → snake_case).
-- `@Id` — this field is the primary key.
-- `@GeneratedValue(IDENTITY)` — the DATABASE assigns ids on insert
-  (1, 2, 3...). Code never sets ids; note `id` has no setter and the
-  public constructor takes no id.
-- `protected Book() {}` — JPA builds objects empty via reflection,
-  then fills the fields from the row. It needs a no-arg constructor.
-  `protected` keeps other code from creating half-empty books.
-- `@Column(precision = 10, scale = 2)` — money: 10 digits total, 2
-  after the point.
+Important parts:
+- `@Entity` → map this class to a database table
+- `@Id` → primary key
+- `@GeneratedValue` → database generates the id
+- no-arg constructor → required by JPA
 
-Proof of the mapping — this line appeared in the log at startup
-(Hibernate created the schema from the entity):
-
-```
-Hibernate: create table book (price numeric(10,2), id bigint generated
-  by default as identity, author varchar(255), title varchar(255),
-  primary key (id))
-```
-
-## 3. The repository shrinks to one line
-
-The HashMap class from tutorial 03 is gone. The whole file is now:
+## 3. Replace the manual repository with Spring Data JPA
 
 ```java
 public interface BookRepository extends JpaRepository<Book, Long> {
 }
 ```
 
-An interface with an EMPTY body — so where is the code? At startup,
-Spring Data sees the interface, reads the type arguments (entity
-`Book`, id type `Long`), and generates the implementing class at
-runtime. That generated object is the bean your service injects.
+This gives you methods such as:
+- `findAll()`
+- `findById()`
+- `save()`
+- `deleteById()`
 
-Inherited for free: `findAll()`, `findById(id)`, `save(entity)`,
-`deleteById(id)`, `count()`, `existsById(id)`, and more — each one
-turned into real SQL when called. Tutorial 06 uses most of them.
+Spring generates the implementation for you at startup.
 
-## 4. Seed data: data.sql
+## 4. Seed the database
 
-An in-memory database starts empty on every run. Spring runs
-`src/main/resources/data.sql` automatically at startup:
+Create `data.sql`:
 
 ```sql
 INSERT INTO book (title, author, price) VALUES
   ('Effective Java', 'Joshua Bloch', 54.99),
-  ...
+  ('Clean Code', 'Robert C. Martin', 42.50),
+  ('The Pragmatic Programmer', 'Andrew Hunt', 49.95);
 ```
 
-Two deliberate choices in it:
+Also enable deferred initialization:
 
-1. **No ids in the INSERT.** The identity column assigns 1, 2, 3. If
-   we inserted explicit ids, the identity counter would still be at
-   1, and the first API-created book would collide with a seeded id.
-2. One line in `application.properties` makes the timing work:
-   `spring.jpa.defer-datasource-initialization=true` — Hibernate must
-   create the table BEFORE data.sql inserts into it. Without the
-   line, boot fails with "Table BOOK not found".
+```properties
+spring.jpa.defer-datasource-initialization=true
+```
 
-(data.sql is the H2-phase solution. Tutorial 18 replaces it with
-Flyway migrations, the production tool.)
+This ensures the table exists before the insert runs.
 
-## 5. Seeing the SQL
+## 5. View the SQL
 
-In `application-dev.properties`:
+In dev config:
 
 ```properties
 spring.jpa.show-sql=true
 ```
 
-Run with the dev profile and call the endpoint:
+Now when you call the API, you can see the generated SQL in the console.
 
-```bash
-SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
-curl http://localhost:8080/api/v1/books
+## 6. Use the H2 console
+
+In dev config:
+
+```properties
+spring.h2.console.enabled=true
 ```
 
-Real output — the same three books, now coming out of H2:
+Then open:
 
-```
-[{"title":"Effective Java","author":"Joshua Bloch","price":54.99,"id":1},
- {"title":"Clean Code","author":"Robert C. Martin","price":42.50,"id":2},
- {"title":"The Pragmatic Programmer","author":"Andrew Hunt","price":49.95,"id":3}]
+```text
+http://localhost:8080/h2-console
 ```
 
-And in the app's log, the SQL that `findAll()` became:
+Use:
+- JDBC URL: `jdbc:h2:mem:bookshop`
+- username: `sa`
+- password: empty
 
-```
-Hibernate: select b1_0.id,b1_0.author,b1_0.price,b1_0.title from book b1_0
-```
+This lets you inspect the database directly.
 
-Keep show-sql on for the whole course. Reading the generated SQL is
-how you catch JPA doing something dumb (tutorial 10's N+1 problem is
-exactly that, and this log line is how we will SEE it).
+## 7. Common mistakes
 
-## 6. Looking inside the database: the H2 console
+- forgetting `@Id` on the entity
+- forgetting the no-arg constructor
+- forgetting `spring.jpa.defer-datasource-initialization=true`
 
-`spring.h2.console.enabled=true` (dev profile) serves a small
-database UI from your own app. Boot 4 note: the console moved to its
-own module, so the pom needs `spring-boot-h2console` — without it the
-property is silently ignored and `/h2-console` 404s (I hit exactly
-that building this).
+## 8. Goal for this tutorial
 
-Verified — startup log:
+By the end of this tutorial, you should understand:
+- why JPA maps Java classes to database tables
+- what `JpaRepository` gives you
+- how H2 is used for local development
+- how SQL appears in the logs
 
-```
-H2 console available at '/h2-console'. Database available at 'jdbc:h2:mem:bookshop'
-```
-
-Open http://localhost:8080/h2-console in a browser and log in with:
-
-```
-JDBC URL:  jdbc:h2:mem:bookshop
-User:      sa
-Password:  (leave empty)
-```
-
-Then run `SELECT * FROM book;` and you are looking at your API's
-data. (The fixed name `jdbc:h2:mem:bookshop` comes from
-`spring.datasource.url` in the dev profile — otherwise H2 picks a
-random name per start and you'd have to fish it out of the log.)
-
-Where did the schema come from? For an embedded database Spring Boot
-defaults to `ddl-auto=create-drop`: Hibernate drops and recreates
-tables from the entities on every start. Convenient now; totally
-wrong for production — tutorial 18 turns it off in favor of
-migrations.
-
-## 7. The common mistakes (both reproduced)
-
-**Forgot `@Id`** — fails fast at startup, clear message:
-
-```
-Entity 'com.example.bookshop.model.Book' has no identifier (every
-'@Entity' class must declare or inherit at least one '@Id' or
-'@EmbeddedId' property)
-```
-
-**Forgot the no-arg constructor** — the nasty one. The app starts
-WITHOUT any complaint, and then the first read explodes:
-
-```
-GET /api/v1/books  ->  HTTP 500
-"message": "No default constructor for entity
-            'com.example.bookshop.model.Book'"
-```
-
-A bug that hides until the first query is worse than one that kills
-startup. When an entity 500s on read, check for the no-arg
-constructor first. (You will meet this the day you add a custom
-constructor to an entity — Java then stops generating the default
+Next: [**Tutorial 06 — Full CRUD API**](tutorial-06%20%28Full%20CRUD%20API%29.md)
 one.)
 
 ## 8. Recap

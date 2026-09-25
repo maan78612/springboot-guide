@@ -1,223 +1,146 @@
 # Tutorial 04 — Configuration
 
-application.properties, @Value, @ConfigurationProperties with
-fail-fast validation, profiles (dev vs prod), environment variables,
-and where secrets must NOT go.
+Keep configuration outside the code and make the app behave differently in dev and prod.
 
 Files for this stage:
-- `src/main/resources/application.properties` (grew)
-- `src/main/resources/application-dev.properties` (new)
-- `src/main/resources/application-prod.properties` (new)
-- `config/BookshopProperties.java` (new)
-- `controller/ShopController.java` (new)
-- `BookshopApplication.java` (+ @ConfigurationPropertiesScan)
-- `pom.xml` (+ spring-boot-starter-validation)
+- `src/main/resources/application.properties`
+- `src/main/resources/application-dev.properties`
+- `src/main/resources/application-prod.properties`
+- `src/main/java/com/example/bookshop/config/BookshopProperties.java`
+- `src/main/java/com/example/bookshop/controller/ShopController.java`
+- `src/main/java/com/example/bookshop/BookshopApplication.java`
 
 ---
 
-## 1. Why configuration lives outside the code
+## 1. Put config in properties files
 
-Some values must change WITHOUT recompiling: the port, the database
-address, page-size limits, feature switches. The same jar should run
-on your laptop and in production — only its settings differ. (Same
-reason your Node repo reads `process.env` instead of hardcoding.)
+Instead of hardcoding values, keep them in `application.properties`:
 
-Spring's home for those values is
-`src/main/resources/application.properties` — plain `key=value`
-lines. Two kinds of keys live there:
-
-```
-+---------------------------+---------------------------------------+
-| Spring's own keys         | Your own keys                         |
-+---------------------------+---------------------------------------+
-| server.port,              | Any prefix you invent. Ours is        |
-| spring.application.name,  | bookshop.* :                          |
-| thousands more - they     |   bookshop.shop-name=Bookshop         |
-| configure the framework   |   bookshop.currency=USD               |
-|                           |   bookshop.catalog.max-page-size=100  |
-+---------------------------+---------------------------------------+
+```properties
+bookshop.shop-name=Bookshop
+bookshop.currency=USD
+bookshop.catalog.max-page-size=100
 ```
 
-## 2. Reading one value: @Value
+This lets the same app run with different values in different environments.
 
-The first version of `ShopController` read settings like this:
+## 2. Read values with @Value
+
+Simple case:
 
 ```java
 @Value("${bookshop.currency}")
 private String currency;
 ```
 
-"At startup, look up `bookshop.currency` and inject it here." It
-works — `GET /api/v1/shop` returned:
+This pulls the value from the config at startup.
 
+For many settings, it is better to bind a whole group together.
+
+## 3. Read a whole config block with @ConfigurationProperties
+
+```java
+@ConfigurationProperties(prefix = "bookshop")
+public class BookshopProperties {
+
+    private String shopName;
+    private String currency;
+
+    public String getShopName() { return shopName; }
+    public void setShopName(String shopName) { this.shopName = shopName; }
+
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+}
 ```
-{"currency":"USD","name":"Bookshop"}
+
+Then enable it in the app:
+
+```java
+@SpringBootApplication
+@ConfigurationPropertiesScan
+public class BookshopApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(BookshopApplication.class, args);
+    }
+}
 ```
 
-**The common mistake for this topic.** I misspelled the key as
-`${bookshop.currencyy}`. The app refuses to start:
+This is cleaner than reading each value separately.
 
-```
-Caused by: org.springframework.util.PlaceholderResolutionException:
-Could not resolve placeholder 'bookshop.currencyy' in value "${bookshop.currencyy}"
-```
+## 4. Fail fast on bad config
 
-The message names the bad key, but not WHERE you wrote it — with
-twenty `@Value`s scattered across the app, you grep. Which leads to
-the better tool.
-
-## 3. Reading a group of values: @ConfigurationProperties
-
-`BookshopProperties` is the whole `bookshop.*` section as one typed
-bean:
+Add validation:
 
 ```java
 @ConfigurationProperties(prefix = "bookshop")
 @Validated
 public class BookshopProperties {
-    @NotBlank private String shopName;
-    @NotBlank private String currency;
-    @Valid    private final Catalog catalog = new Catalog();
-    // getters and setters ...
+
+    @NotBlank
+    private String shopName;
+
+    @NotBlank
+    private String currency;
 }
 ```
 
-At startup Spring "binds" the file to the object: it matches
-`bookshop.shop-name` to `setShopName(...)` (kebab-case maps to
-camelCase automatically) and `bookshop.catalog.max-page-size` to the
-nested `Catalog` object. One extra line makes Spring find the class —
-`@ConfigurationPropertiesScan` on `BookshopApplication`.
-
-Consumers now inject it like any bean (see the rewritten
-`ShopController`) — configuration is just another dependency.
-
-```
-+----------------------------+---------------------------------------+
-| @Value                     | @ConfigurationProperties              |
-+----------------------------+---------------------------------------+
-| one key per annotation     | a whole prefix as one typed object    |
-| key string repeated at     | key names exist in exactly one class  |
-| every reader               |                                       |
-| typo found when the        | typo = unknown key is simply ignored, |
-| READER class is created    | but a missing/blank value fails the   |
-|                            | bind (with validation below)          |
-| fine for a single value    | the default for real projects         |
-+----------------------------+---------------------------------------+
-```
-
-## 4. Fail fast: validate config at startup
-
-`@Validated` plus constraints (`@NotBlank`, `@Min(1)`, `@Max(500)`)
-make bad config kill the boot instead of surfacing at 2 a.m. on the
-first request that uses the value. This is the Spring version of the
-`env.js` validation in your Node repo.
-
-Verified: I set `bookshop.catalog.max-page-size=0` and started:
-
-```
-***************************
-APPLICATION FAILED TO START
-***************************
-
-Description:
-
-Binding to target com.example.bookshop.config.BookshopProperties failed:
-
-    Property: bookshop.catalog.maxPageSize
-    Value: "0"
-    Reason: must be greater than or equal to 1
-
-Action:
-
-Update your application's configuration
-```
-
-Exact property, exact value, exact reason. This is the best error
-message in Spring Boot; make your config fail like this on purpose.
-(The constraint annotations get their full tutorial at stage 08.)
+If the value is missing or invalid, the app fails at startup instead of failing later during requests.
 
 ## 5. Profiles: dev vs prod
 
-> A **profile** is a named set of configuration. Activate a profile
-> and its file is loaded ON TOP of application.properties — same
-> keys win, everything else falls through.
+Use different property files:
 
-The file naming convention does all the work:
-
-```
-application.properties        always loaded (the base)
-application-dev.properties    loaded when profile "dev" is active
-application-prod.properties   loaded when profile "prod" is active
+```text
+application.properties        # base config
+application-dev.properties     # dev overrides
+application-prod.properties    # prod overrides
 ```
 
-Our `application-dev.properties` overrides one key
-(`bookshop.shop-name=Bookshop (dev)`) so the effect is visible.
-Real differences (SQL logging, database address, log format) arrive
-in tutorials 14, 18 and 19.
-
-Verified, three runs:
+Activate a profile:
 
 ```bash
-./mvnw spring-boot:run                              # no profile
-SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run   # dev profile
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
-```
-=== no profile ===
-log:  No active profile set, falling back to 1 default profile: "default"
-curl: {"name":"Bookshop","currency":"USD"}
+This lets you change behavior without changing code.
 
-=== dev profile ===
-log:  The following 1 profile is active: "dev"
-curl: {"currency":"USD","name":"Bookshop (dev)"}
-```
+## 6. Environment variables override files
 
-! Warning, the silent version of this topic's mistake: name the file
-wrong — `application_dev.properties` or `application-Dev.properties` —
-and NOTHING complains. The file is simply never loaded and you get
-base values. If a profile "isn't working", check the filename and the
-startup log's "profile is active" line first.
+You can override config with environment variables:
 
-## 6. Environment variables beat the file
-
-Every property can be overridden from outside, without touching any
-file. Spring translates env-var names automatically ("relaxed
-binding"): dots become underscores, everything uppercase.
-
-```
-+--------------------------------+--------------------------+
-| Property key                   | Environment variable     |
-+--------------------------------+--------------------------+
-| bookshop.currency              | BOOKSHOP_CURRENCY        |
-| server.port                    | SERVER_PORT              |
-| spring.profiles.active         | SPRING_PROFILES_ACTIVE   |
-+--------------------------------+--------------------------+
-```
-
-Verified:
-
-```
+```bash
 BOOKSHOP_CURRENCY=EUR ./mvnw spring-boot:run
-curl: {"name":"Bookshop","currency":"EUR"}      <- file says USD
-
-SERVER_PORT=8081 ./mvnw spring-boot:run
-log:  Tomcat started on port 8081 (http)        <- tutorial 01's
-                                                   port-conflict fix
 ```
 
-Precedence, simplified — later wins:
+Spring automatically maps this to the property `bookshop.currency`.
 
-1. `application.properties` (base)
-2. `application-<profile>.properties` (active profile)
+Order of precedence:
+
+1. `application.properties`
+2. profile-specific file
 3. environment variables
-4. command-line args (`--server.port=8081`)
+4. command-line arguments
 
-This is exactly how production works (tutorial 19): the SAME jar,
-configured entirely by environment variables.
+## 7. Secrets must not live in source files
 
-## 7. Where secrets do NOT go
+Never put real secrets in `application.properties`.
+Use environment variables or secret managers in production.
 
-> A **secret** is any value that grants access: passwords, API keys,
+Examples:
+- DB passwords
+- JWT secret
+- API keys
+
+## 8. Goal for this tutorial
+
+By the end of this tutorial, you should understand:
+- why config lives outside code
+- how `@ConfigurationProperties` works
+- how profiles switch behavior
+- how environment variables override defaults
+
+Next: [**Tutorial 05 — Database and JPA**](tutorial-05%20%28Database%20and%20JPA%29.md)
 > tokens, connection strings with passwords in them.
 
 Rules, non-negotiable:
