@@ -3,6 +3,7 @@
 Keep configuration outside the code and make the app behave differently in dev and prod.
 
 Files for this stage:
+
 - `src/main/resources/application.properties`
 - `src/main/resources/application-dev.properties`
 - `src/main/resources/application-prod.properties`
@@ -128,6 +129,7 @@ Never put real secrets in `application.properties`.
 Use environment variables or secret managers in production.
 
 Examples:
+
 - DB passwords
 - JWT secret
 - API keys
@@ -135,12 +137,14 @@ Examples:
 ## 8. Goal for this tutorial
 
 By the end of this tutorial, you should understand:
+
 - why config lives outside code
 - how `@ConfigurationProperties` works
 - how profiles switch behavior
 - how environment variables override defaults
 
 Next: [**Tutorial 05 — Database and JPA**](tutorial-05%20%28Database%20and%20JPA%29.md)
+
 > tokens, connection strings with passwords in them.
 
 Rules, non-negotiable:

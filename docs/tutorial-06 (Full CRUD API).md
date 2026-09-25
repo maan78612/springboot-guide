@@ -3,6 +3,7 @@
 Add the full create/read/update/delete API for books.
 
 Files for this stage:
+
 - `src/main/java/com/example/bookshop/service/BookService.java`
 - `src/main/java/com/example/bookshop/controller/BookController.java`
 
@@ -12,13 +13,13 @@ Files for this stage:
 
 The usual mapping is:
 
-| HTTP verb | URL | Meaning | Status |
-|---|---|---|---|
-| GET | `/api/v1/books` | list books | 200 |
-| GET | `/api/v1/books/{id}` | get one book | 200 |
-| POST | `/api/v1/books` | create book | 201 |
-| PUT | `/api/v1/books/{id}` | update book | 200 |
-| DELETE | `/api/v1/books/{id}` | delete book | 204 |
+| HTTP verb | URL                  | Meaning      | Status |
+| --------- | -------------------- | ------------ | ------ |
+| GET       | `/api/v1/books`      | list books   | 200    |
+| GET       | `/api/v1/books/{id}` | get one book | 200    |
+| POST      | `/api/v1/books`      | create book  | 201    |
+| PUT       | `/api/v1/books/{id}` | update book  | 200    |
+| DELETE    | `/api/v1/books/{id}` | delete book  | 204    |
 
 This keeps the URL focused on the resource and the HTTP verb focused on the action.
 
@@ -52,6 +53,7 @@ return ResponseEntity.created(URI.create("/api/v1/books/" + saved.getId())).body
 ```
 
 This returns:
+
 - status 201
 - `Location` header
 - created body
@@ -72,6 +74,7 @@ This is a very common bug in CRUD tutorials.
 ## 6. Keep the service responsible for logic
 
 The controller should mostly do:
+
 - receive request
 - pass it to service
 - translate result to HTTP status and response
@@ -81,6 +84,7 @@ The service should do the actual business work.
 ## 7. Goal for this tutorial
 
 By the end of this tutorial, you should know:
+
 - how to map CRUD routes
 - how `@PathVariable` and `@RequestBody` work
 - how `ResponseEntity` controls HTTP status

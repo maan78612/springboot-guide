@@ -3,6 +3,7 @@
 Move the app from in-memory lists to a real database-backed JPA layer.
 
 Files for this stage:
+
 - `pom.xml`
 - `src/main/java/com/example/bookshop/model/Book.java`
 - `src/main/java/com/example/bookshop/repository/BookRepository.java`
@@ -30,6 +31,7 @@ Add Spring Data JPA and H2 to the project:
 ```
 
 This gives you:
+
 - JPA mapping support
 - database repository generation
 - an in-memory H2 database for development
@@ -62,6 +64,7 @@ public class Book {
 ```
 
 Important parts:
+
 - `@Entity` → map this class to a database table
 - `@Id` → primary key
 - `@GeneratedValue` → database generates the id
@@ -75,6 +78,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 ```
 
 This gives you methods such as:
+
 - `findAll()`
 - `findById()`
 - `save()`
@@ -126,6 +130,7 @@ http://localhost:8080/h2-console
 ```
 
 Use:
+
 - JDBC URL: `jdbc:h2:mem:bookshop`
 - username: `sa`
 - password: empty
@@ -141,6 +146,7 @@ This lets you inspect the database directly.
 ## 8. Goal for this tutorial
 
 By the end of this tutorial, you should understand:
+
 - why JPA maps Java classes to database tables
 - what `JpaRepository` gives you
 - how H2 is used for local development
