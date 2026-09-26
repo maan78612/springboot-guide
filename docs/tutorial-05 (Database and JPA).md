@@ -4,12 +4,12 @@ Move the app from in-memory lists to a real database-backed JPA layer.
 
 Files for this stage:
 
-- `pom.xml`
-- `src/main/java/com/example/bookshop/model/Book.java`
-- `src/main/java/com/example/bookshop/repository/BookRepository.java`
-- `src/main/resources/data.sql`
-- `src/main/resources/application.properties`
-- `src/main/resources/application-dev.properties`
+- Updated: `pom.xml`
+- Updated: `src/main/java/com/example/bookshop/model/Book.java`
+- New: `src/main/java/com/example/bookshop/repository/BookRepository.java`
+- New: `src/main/resources/data.sql`
+- Updated: `src/main/resources/application.properties`
+- Updated: `src/main/resources/application-dev.properties`
 
 ---
 

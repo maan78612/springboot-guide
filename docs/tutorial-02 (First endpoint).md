@@ -4,8 +4,8 @@ Create your first Spring Boot endpoint and return JSON.
 
 Files for this stage:
 
-- `src/main/java/com/example/bookshop/model/Book.java`
-- `src/main/java/com/example/bookshop/controller/BookController.java`
+- New: `src/main/java/com/example/bookshop/model/Book.java`
+- New: `src/main/java/com/example/bookshop/controller/BookController.java`
 
 ---
 

@@ -4,8 +4,8 @@ Add the full create/read/update/delete API for books.
 
 Files for this stage:
 
-- `src/main/java/com/example/bookshop/service/BookService.java`
-- `src/main/java/com/example/bookshop/controller/BookController.java`
+- Updated: `src/main/java/com/example/bookshop/service/BookService.java`
+- Updated: `src/main/java/com/example/bookshop/controller/BookController.java`
 
 ---
 
