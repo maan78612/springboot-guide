@@ -4,9 +4,9 @@ Move the book list out of the controller and into proper layers.
 
 Files for this stage:
 
-- `src/main/java/com/example/bookshop/repository/BookRepository.java`
-- `src/main/java/com/example/bookshop/service/BookService.java`
-- `src/main/java/com/example/bookshop/controller/BookController.java`
+- New: `src/main/java/com/example/bookshop/repository/BookRepository.java`
+- New: `src/main/java/com/example/bookshop/service/BookService.java`
+- Updated: `src/main/java/com/example/bookshop/controller/BookController.java`
 
 ---
 

@@ -4,12 +4,12 @@ Move the shop name and currency out of Java code and into Spring configuration.
 
 Files used in this tutorial:
 
-- `src/main/resources/application.properties`
-- `src/main/resources/application-dev.properties`
-- `src/main/resources/application-prod.properties`
-- `src/main/java/com/example/bookshop/config/BookshopProperties.java`
-- `src/main/java/com/example/bookshop/controller/ShopController.java`
-- `src/main/java/com/example/bookshop/BookshopApplication.java`
+- Updated: `src/main/resources/application.properties`
+- New: `src/main/resources/application-dev.properties`
+- New: `src/main/resources/application-prod.properties`
+- New: `src/main/java/com/example/bookshop/config/BookshopProperties.java`
+- New: `src/main/java/com/example/bookshop/controller/ShopController.java`
+- Updated: `src/main/java/com/example/bookshop/BookshopApplication.java`
 
 ---
 
