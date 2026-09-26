@@ -2,6 +2,16 @@
 
 Move the shop name and currency out of Java code and into Spring configuration.
 
+Why configuration matters: application settings change between environments and teams, but the Java code should not need to be edited each time. We keep environment-specific values outside the code so the same app can run in development, test, and production with different URLs, credentials, feature flags, and limits.
+
+Common use cases for configuration:
+
+- different database URLs and credentials per environment
+- secret keys, JWT settings, and admin defaults
+- feature toggles for turning parts of the app on or off
+- server ports, timeouts, and cache settings
+- external service endpoints such as payment or email providers
+
 Files used in this tutorial:
 
 - Updated: `src/main/resources/application.properties`
@@ -80,6 +90,8 @@ public class BookshopProperties {
 ```
 
 Spring maps `bookshop.shop-name` to `shopName` and `bookshop.currency` to `currency`.
+
+Why a config package: the application settings belong in one place, not scattered across controllers, services, and startup classes. A dedicated config package keeps the settings organized, easy to read, and easy to reuse in multiple parts of the app.
 
 ## 4. Register the configuration class
 
