@@ -1,93 +1,191 @@
 # Tutorial 06 — Full CRUD API
 
-Add the full create/read/update/delete API for books.
+Replace the read-only books endpoint with create, read, update, and delete operations.
 
 Files for this stage:
 
+- Updated: `src/main/java/com/example/bookshop/model/Book.java`
 - Updated: `src/main/java/com/example/bookshop/service/BookService.java`
 - Updated: `src/main/java/com/example/bookshop/controller/BookController.java`
 
+This version returns `Book` directly to keep the first CRUD example small. Tutorial 7 will replace that with request/response DTOs.
+
 ---
 
-## 1. CRUD map
+## 1. Add setters to `Book`
 
-The usual mapping is:
-
-| HTTP verb | URL                  | Meaning      | Status |
-| --------- | -------------------- | ------------ | ------ |
-| GET       | `/api/v1/books`      | list books   | 200    |
-| GET       | `/api/v1/books/{id}` | get one book | 200    |
-| POST      | `/api/v1/books`      | create book  | 201    |
-| PUT       | `/api/v1/books/{id}` | update book  | 200    |
-| DELETE    | `/api/v1/books/{id}` | delete book  | 204    |
-
-This keeps the URL focused on the resource and the HTTP verb focused on the action.
-
-## 2. Read from the URL with @PathVariable
+The update operation loads the saved book and changes its fields. Add these setters to the `Book` class from tutorial 5:
 
 ```java
-@GetMapping("/{id}")
-public Book getBookById(@PathVariable Long id) {
-    return bookService.getBookById(id);
+public void setTitle(String title) {
+    this.title = title;
+}
+
+public void setAuthor(String author) {
+    this.author = author;
+}
+
+public void setPrice(BigDecimal price) {
+    this.price = price;
 }
 ```
 
-`{id}` becomes the Java method parameter.
+Keep the getters, constructors, and JPA annotations already in the class.
 
-## 3. Read the request body with @RequestBody
+## 2. Implement the CRUD operations in `BookService`
+
+Replace the tutorial 3 service with this version:
 
 ```java
-@PostMapping
-public ResponseEntity<Book> createBook(@RequestBody Book book) {
-    Book saved = bookService.save(book);
-    return ResponseEntity.created(URI.create("/api/v1/books/" + saved.getId())).body(saved);
+package com.example.bookshop.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.example.bookshop.model.Book;
+import com.example.bookshop.repository.BookRepository;
+
+@Service
+public class BookService {
+
+    private final BookRepository bookRepository;
+
+    public BookService(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }
+
+    public List<Book> getAllBooks() {
+        return bookRepository.findAll();
+    }
+
+    public Book getBookById(Long id) {
+        return bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found: " + id));
+    }
+
+    public Book createBook(Book book) {
+        return bookRepository.save(book);
+    }
+
+    public Book updateBook(Long id, Book changes) {
+        Book book = getBookById(id);
+        book.setTitle(changes.getTitle());
+        book.setAuthor(changes.getAuthor());
+        book.setPrice(changes.getPrice());
+        return bookRepository.save(book);
+    }
+
+    public void deleteBook(Long id) {
+        Book book = getBookById(id);
+        bookRepository.delete(book);
+    }
 }
 ```
 
-This is how JSON sent by the client turns into a Java object.
+`findAll`, `findById`, `save`, and `delete` are supplied by `JpaRepository`. The service loads the existing book before updating or deleting it. Tutorial 9 replaces the temporary `RuntimeException` with the app's standard not-found error handling.
 
-## 4. Use ResponseEntity for status and headers
+## 3. Add all five endpoints to `BookController`
 
-```java
-return ResponseEntity.created(URI.create("/api/v1/books/" + saved.getId())).body(saved);
-```
-
-This returns:
-
-- status 201
-- `Location` header
-- created body
-
-For delete:
+Replace the tutorial 3 controller with:
 
 ```java
-return ResponseEntity.noContent().build();
+package com.example.bookshop.controller;
+
+import java.net.URI;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.bookshop.model.Book;
+import com.example.bookshop.service.BookService;
+
+@RestController
+@RequestMapping("/api/v1/books")
+public class BookController {
+
+    private final BookService bookService;
+
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
+    }
+
+    @GetMapping
+    public List<Book> getAllBooks() {
+        return bookService.getAllBooks();
+    }
+
+    @GetMapping("/{id}")
+    public Book getBookById(@PathVariable Long id) {
+        return bookService.getBookById(id);
+    }
+
+    @PostMapping
+    public ResponseEntity<Book> createBook(@RequestBody Book book) {
+        Book saved = bookService.createBook(book);
+        return ResponseEntity.created(URI.create("/api/v1/books/" + saved.getId()))
+                .body(saved);
+    }
+
+    @PutMapping("/{id}")
+    public Book updateBook(@PathVariable Long id, @RequestBody Book changes) {
+        return bookService.updateBook(id, changes);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id);
+        return ResponseEntity.noContent().build();
+    }
+}
 ```
 
-## 5. Common mistake: forgetting @RequestBody
+`@PathVariable` reads the `id` from the URL. `@RequestBody` converts incoming JSON into a `Book`. The create endpoint returns `201 Created` with a `Location` header; delete returns `204 No Content`.
 
-If you forget `@RequestBody`, Spring will not read the JSON body correctly.
-The object may come through as empty or null-valued, and the API may still return 201.
+## 4. Try the endpoints
 
-This is a very common bug in CRUD tutorials.
+Start the app:
 
-## 6. Keep the service responsible for logic
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
 
-The controller should mostly do:
+Create a book:
 
-- receive request
-- pass it to service
-- translate result to HTTP status and response
+```bash
+curl -i -X POST http://localhost:8080/api/v1/books \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Clean Code","author":"Robert C. Martin","price":42.50}'
+```
 
-The service should do the actual business work.
+Then use the returned `id` to try:
 
-## 7. Goal for this tutorial
+```bash
+curl http://localhost:8080/api/v1/books
+curl http://localhost:8080/api/v1/books/1
 
-By the end of this tutorial, you should know:
+curl -X PUT http://localhost:8080/api/v1/books/1 \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Clean Code, Updated","author":"Robert C. Martin","price":45.00}'
 
-- how to map CRUD routes
-- how `@PathVariable` and `@RequestBody` work
-- how `ResponseEntity` controls HTTP status
-- why the API should use verbs and resources correctly
+curl -i -X DELETE http://localhost:8080/api/v1/books/1
+```
+
+The project adds authentication later, so once tutorial 15 is applied, write requests require a bearer token.
+
+## 5. Remember
+
+- Controller: maps HTTP requests to service calls and chooses the HTTP response.
+- Service: performs the operation using the repository.
+- Repository: `JpaRepository` reads and writes database rows.
+- Tutorial 7 replaces direct entity input/output with DTOs; tutorial 9 adds consistent error handling.
 
 Next: [**Tutorial 07 — DTOs and the response envelope**](tutorial-07%20%28DTOs%20and%20the%20response%20envelope%29.md)
