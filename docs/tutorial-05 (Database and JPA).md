@@ -86,6 +86,20 @@ This gives you methods such as:
 
 Spring generates the implementation for you at startup.
 
+### Update the service from tutorial 3
+
+In tutorial 3, your handmade repository declared `getAllBooks()`. Replace that repository with the JPA interface above, then update the service to use the built-in `findAll()` method:
+
+```java
+public List<Book> getAllBooks() {
+    return bookRepository.findAll();
+}
+```
+
+Keep the service method named `getAllBooks()`; only change the call on `bookRepository`. `findAll()` is already provided by `JpaRepository`, so do not declare `getAllBooks()` in `BookRepository`.
+
+If the app fails at startup with `No property 'getAllBooks' found for type 'Book'`, Spring Data is trying to build a database query from a repository method named `getAllBooks()`. Remove that method from the repository and call `findAll()` from the service as shown above. Spring Data derives query methods from names such as `findByTitle(...)`; `getAllBooks()` is not a built-in repository method.
+
 ## 4. Seed the database
 
 Create `data.sql`:
