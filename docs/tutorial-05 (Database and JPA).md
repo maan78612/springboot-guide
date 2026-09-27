@@ -28,6 +28,13 @@ Add Spring Data JPA and H2 to the project:
     <artifactId>h2</artifactId>
     <scope>runtime</scope>
 </dependency>
+
+<!-- Required by Spring Boot 4 to serve the H2 browser console -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-h2console</artifactId>
+    <scope>runtime</scope>
+</dependency>
 ```
 
 This gives you:
@@ -35,6 +42,7 @@ This gives you:
 - JPA mapping support
 - database repository generation
 - an in-memory H2 database for development
+- the H2 Console web page
 
 ## 2. Turn Book into an entity
 
@@ -137,7 +145,13 @@ In dev config:
 spring.h2.console.enabled=true
 ```
 
-Then open:
+Start the app with the `dev` profile so Spring loads `application-dev.properties`:
+
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
+
+Then open this address in your browser:
 
 ```text
 http://localhost:8080/h2-console
@@ -150,6 +164,8 @@ Use:
 - password: empty
 
 This lets you inspect the database directly.
+
+If this URL returns 404 with `No static resource h2-console`, check that the `spring-boot-h2console` dependency is in `pom.xml`, that the `dev` profile is active, and that the app was restarted after adding the dependency. A 404 means the console page was not registered; it is different from an H2 login failure.
 
 ## 7. Common mistakes
 
