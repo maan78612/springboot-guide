@@ -36,24 +36,34 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Validation rules for BookRequest
+ * <p>
+ * | Annotation            | Field          | Explanation                                              |
+ * |-----------------------|----------------|----------------------------------------------------------|
+ * | @NotBlank             | title, author  | Rejects null, empty "", or whitespace-only "   " values  |
+ * | @Size(max = 200)      | title          | Limits the title to at most 200 characters               |
+ * | @NotNull              | price          | Rejects a missing or null price                          |
+ * | @Positive             | price          | Price must be greater than 0 (0 and negatives fail)      |
+ * | @Digits(8, 2)         | price          | Up to 8 digits before and 2 after the decimal point      |
+ */
+
+
 public record BookRequest(
-        // Rejects null, empty, or whitespace-only titles.
+
         @NotBlank(message = "title is required")
-        // Limits the title to 200 characters.
         @Size(max = 200, message = "title must be at most 200 characters")
         String title,
 
-        // Rejects null, empty, or whitespace-only author names.
         @NotBlank(message = "author is required")
         String author,
 
-        // Rejects a missing/null price.
         @NotNull(message = "price is required")
-        // Requires the price to be greater than zero.
         @Positive(message = "price must be greater than 0")
-        // Allows up to 8 digits before and 2 digits after the decimal point.
         @Digits(integer = 8, fraction = 2, message = "price must have at most 2 decimal places")
-        BigDecimal price) {
+        BigDecimal price
+
+) {
 }
 ```
 
