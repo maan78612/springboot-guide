@@ -121,6 +121,22 @@ curl -i -X POST http://localhost:8080/api/v1/books \
         -d '{"title":"","author":"","price":-5}'
 ```
 
-The request is rejected with HTTP `400 Bad Request` instead of creating a row. This example assumes you have not yet added authentication in tutorial 15. After tutorial 15, send a valid bearer token too; otherwise security returns `401 Unauthorized` before validation runs. Tutorial 9 adds the app's consistent JSON error response for validation failures.
+Expect HTTP `400 Bad Request` and validation errors for `title`, `author`, and `price`. The request is rejected before the controller method runs, so the invalid book is not saved.
+
+At this point in the course, Spring Boot may include a detailed `trace` in its default error response. That matches the long response shown here and is not a validation bug. Do not expose stack traces in a deployed API. Tutorial 9 adds the global exception handler, which replaces this default body with a short response such as:
+
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    { "field": "title", "message": "title is required" },
+    { "field": "author", "message": "author is required" },
+    { "field": "price", "message": "price must be greater than 0" }
+  ]
+}
+```
+
+This example assumes you have not yet added authentication in tutorial 15. After tutorial 15, send a valid bearer token too; otherwise security returns `401 Unauthorized` before validation runs.
 
 Next: [**Tutorial 09 — Error handling**](tutorial-09%20%28Error%20handling%29.md)
