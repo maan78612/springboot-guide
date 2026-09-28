@@ -128,9 +128,11 @@ public class BookController {
         return bookService.getBookById(id);
     }
 
+    // ResponseEntity lets this endpoint set the status and headers as well as the body.
     @PostMapping
     public ResponseEntity<Book> createBook(@RequestBody Book book) {
         Book saved = bookService.createBook(book);
+        // 201 Created and Location tell the client where the new book can be fetched.
         return ResponseEntity.created(URI.create("/api/v1/books/" + saved.getId()))
                 .body(saved);
     }
@@ -140,6 +142,7 @@ public class BookController {
         return bookService.updateBook(id, changes);
     }
 
+    // ResponseEntity is used here to return 204 No Content instead of the default 200.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);

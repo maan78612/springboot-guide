@@ -28,12 +28,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ErrorResponse> handleApiException(ApiException ex) {
+        // ResponseEntity sets the HTTP status from the error and includes its response body.
         return ResponseEntity.status(ex.getStatus())
                 .body(ErrorResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+        // Validation failures use HTTP 400 Bad Request.
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.validation(ex.getBindingResult()));
     }

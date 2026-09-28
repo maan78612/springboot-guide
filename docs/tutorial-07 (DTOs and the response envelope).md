@@ -192,6 +192,7 @@ public class BookController {
         return ApiResponse.ok("Book fetched", BookResponse.from(bookService.getBookById(id)));
     }
 
+    // ResponseEntity is needed to return 201 Created and a Location header with the envelope body.
     @PostMapping
     public ResponseEntity<ApiResponse<BookResponse>> createBook(@RequestBody BookRequest request) {
         Book saved = bookService.createBook(request);
