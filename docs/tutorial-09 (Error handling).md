@@ -20,6 +20,27 @@ package com.example.bookshop.exception;
 
 import org.springframework.http.HttpStatus;
 
+/**
+ * Custom exception that carries an HTTP status along with the error message.
+ * Throw it from services; GlobalExceptionHandler converts it into a JSON response.
+ *
+ * Usage: throw ApiException.notFound("Book not found with id " + id);
+ *
+ * | Factory method | Status | When to use                                        |
+ * |----------------|--------|----------------------------------------------------|
+ * | badRequest()   | 400    | Input is invalid beyond simple field validation    |
+ * | unauthorized()| 401    | User is not logged in or credentials are invalid  |
+ * | forbidden()    | 403    | User is logged in but not allowed to do this       |
+ * | notFound()     | 404    | Requested resource does not exist                 |
+ * | conflict()     | 409    | Clashes with existing data                        |
+ *
+ * | Key              | Explanation                                                   |
+ * |------------------|---------------------------------------------------------------|
+ * | RuntimeException | Unchecked; methods do not need a throws declaration           |
+ * | super(message)   | Stores the message, later available through getMessage()     |
+ * | final status     | Status is fixed once the exception is created                 |
+ * | static factories | Readable shortcuts for creating status-specific exceptions   |
+ */
 public class ApiException extends RuntimeException {
 
     private final HttpStatus status;
@@ -118,19 +139,26 @@ import com.example.bookshop.dto.ErrorResponse;
 import com.example.bookshop.dto.ErrorResponse.FieldViolation;
 
 /**
- * Converts exceptions from controller requests into consistent API responses.
+ * Catches exceptions thrown from any controller and turns them into
+ * a consistent JSON error response, so controllers do not need try/catch.
+ *
+ * Flow: Controller throws -> Spring finds matching @ExceptionHandler -> JSON error returned
  *
  * | Exception                       | Status | Description                   |
  * |---------------------------------|--------|-------------------------------|
- * | ApiException                    | varies | Uses the status in the error  |
- * | MethodArgumentNotValidException | 400    | Request fields failed checks |
- * | Other Exception                 | 500    | Hides details; logs the error |
+ * | ApiException                    | varies | Uses status and message set when thrown |
+ * | MethodArgumentNotValidException | 400    | @Valid failed; returns field errors    |
+ * | Exception (anything else)       | 500    | Logs full error; returns safe message  |
  *
- * | Key                   | Explanation                                      |
- * |-----------------------|--------------------------------------------------|
- * | @RestControllerAdvice | Applies exception handling across controllers    |
- * | @ExceptionHandler     | Selects which exception a method handles         |
- * | ResponseEntity        | Sets both the HTTP status and response body      |
+ * | Key                   | Explanation                                                  |
+ * |-----------------------|--------------------------------------------------------------|
+ * | @RestControllerAdvice | Applies handlers to all controllers; returns JSON            |
+ * | @ExceptionHandler     | Maps an exception type to the method that handles it         |
+ * | ResponseEntity        | Sets both the HTTP status and the response body              |
+ * | Logger (SLF4J)        | Records unexpected errors on the server for debugging        |
+ *
+ * Spring selects the most specific matching handler, so the
+ * Exception.class handler runs only when no more specific handler matches.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
