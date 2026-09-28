@@ -59,7 +59,16 @@ public record ApiResponse<T>(boolean success, String message, T data, Object met
 For example, the response becomes:
 
 ```json
-{"success":true,"message":"Book fetched","data":{"id":1,"title":"Effective Java","author":"Joshua Bloch","price":54.99}}
+{
+  "success": true,
+  "message": "Book fetched",
+  "data": {
+    "id": 1,
+    "title": "Effective Java",
+    "author": "Joshua Bloch",
+    "price": 54.99
+  }
+}
 ```
 
 ## 3. Create the request and response DTOs
