@@ -69,6 +69,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bookshop.model.Book;
 
+/**
+ * First REST endpoint for listing books.
+ *
+ * | Method | Endpoint       | Status | Description          |
+ * |--------|----------------|--------|----------------------|
+ * | GET    | /api/v1/books  | 200    | Return sample books  |
+ *
+ * | Key             | Explanation                                      |
+ * |-----------------|--------------------------------------------------|
+ * | @RestController | Handles HTTP requests and serializes return data |
+ * | @RequestMapping | Sets the shared URL prefix                       |
+ * | @GetMapping     | Maps GET requests to the method                  |
+ */
 @RestController
 @RequestMapping("/api/v1/books")
 public class BookController {

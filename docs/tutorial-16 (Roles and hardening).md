@@ -15,6 +15,7 @@ Files for this stage:
 ## 1. Protect by role
 
 ```java
+/** POST /api/v1/books/{id}/restore — restore a deleted book (admin only). */
 @PreAuthorize("hasRole('ADMIN')")
 @PostMapping("/{id}/restore")
 public ApiResponse<BookResponse> restoreBook(@PathVariable Long id) {

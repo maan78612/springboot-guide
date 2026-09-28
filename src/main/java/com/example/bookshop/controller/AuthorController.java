@@ -15,6 +15,9 @@ package com.example.bookshop.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,8 +32,21 @@ import com.example.bookshop.dto.DiscountRequest;
 import com.example.bookshop.service.AuthorService;
 import com.example.bookshop.service.BookService;
 
-import jakarta.validation.Valid;
-
+/**
+ * REST endpoints for listing authors and discounting an author's books.
+ *
+ * | Method | Endpoint                         | Access | Status | Description                    |
+ * |--------|----------------------------------|--------|--------|--------------------------------|
+ * | GET    | /api/v1/authors                  | Public | 200    | List authors and their books   |
+ * | POST   | /api/v1/authors/{id}/discount    | Admin  | 200    | Discount an author's books     |
+ *
+ * | Key                    | Explanation                                      |
+ * |------------------------|--------------------------------------------------|
+ * | @PathVariable          | Binds author id from the URL                     |
+ * | @RequestBody           | Converts JSON into DiscountRequest               |
+ * | @Valid                 | Validates the discount request                   |
+ * | @PreAuthorize          | Restricts discounts to administrators            |
+ */
 @RestController
 @RequestMapping("/api/v1/authors")
 public class AuthorController {
@@ -51,13 +67,15 @@ public class AuthorController {
 		return ApiResponse.ok("Authors fetched", authors);
 	}
 
-	@org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('ADMIN')")
 	@PostMapping("/{id}/discount")
-	public ApiResponse<List<BookResponse>> applyDiscount(@PathVariable Long id,
+	public ApiResponse<List<BookResponse>> applyDiscount(
+			@PathVariable Long id,
 			@Valid @RequestBody DiscountRequest request) {
 		List<BookResponse> books = bookService.applyAuthorDiscount(id, request.percent()).stream()
 				.map(BookResponse::from)
 				.toList();
+
 		return ApiResponse.ok("Discount applied", books);
 	}
 }

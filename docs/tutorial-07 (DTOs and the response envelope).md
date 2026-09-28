@@ -169,6 +169,24 @@ import com.example.bookshop.dto.BookResponse;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.service.BookService;
 
+/**
+ * Book REST endpoints using request/response DTOs and a response envelope.
+ *
+ * | Method | Endpoint             | Status | Description                    |
+ * |--------|----------------------|--------|--------------------------------|
+ * | GET    | /api/v1/books        | 200    | Return enveloped book list     |
+ * | GET    | /api/v1/books/{id}   | 200    | Return one enveloped book      |
+ * | POST   | /api/v1/books        | 201    | Create; include Location       |
+ * | PUT    | /api/v1/books/{id}   | 200    | Update a book                  |
+ * | DELETE | /api/v1/books/{id}   | 200    | Delete a book                  |
+ *
+ * | Key                | Explanation                                      |
+ * |--------------------|--------------------------------------------------|
+ * | @RequestBody       | Converts JSON into BookRequest                   |
+ * | @PathVariable      | Binds {id} from the URL to a method parameter    |
+ * | ResponseEntity     | Sets create status and Location header           |
+ * | ApiResponse        | Gives responses a consistent JSON body           |
+ */
 @RestController
 @RequestMapping("/api/v1/books")
 public class BookController {
@@ -184,19 +202,23 @@ public class BookController {
         List<BookResponse> books = bookService.getAllBooks().stream()
                 .map(BookResponse::from)
                 .toList();
+
         return ApiResponse.ok("Books fetched", books);
     }
 
     @GetMapping("/{id}")
     public ApiResponse<BookResponse> getBookById(@PathVariable Long id) {
-        return ApiResponse.ok("Book fetched", BookResponse.from(bookService.getBookById(id)));
+        BookResponse book = BookResponse.from(bookService.getBookById(id));
+
+        return ApiResponse.ok("Book fetched", book);
     }
 
-    // ResponseEntity is needed to return 201 Created and a Location header with the envelope body.
     @PostMapping
     public ResponseEntity<ApiResponse<BookResponse>> createBook(@RequestBody BookRequest request) {
         Book saved = bookService.createBook(request);
-        return ResponseEntity.created(URI.create("/api/v1/books/" + saved.getId()))
+        URI location = URI.create("/api/v1/books/" + saved.getId());
+
+        return ResponseEntity.created(location)
                 .body(ApiResponse.ok("Book created", BookResponse.from(saved)));
     }
 
@@ -210,6 +232,7 @@ public class BookController {
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);
+
         return ApiResponse.ok("Book deleted", null);
     }
 }

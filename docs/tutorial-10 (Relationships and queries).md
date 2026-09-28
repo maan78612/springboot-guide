@@ -51,6 +51,19 @@ This lets the list endpoint filter by title, author, genre, and price.
 ## 3. Query parameters on the controller
 
 ```java
+/**
+ * GET /api/v1/books — search books using optional query parameters.
+ *
+ * | Parameter    | Purpose                              |
+ * |--------------|--------------------------------------|
+ * | search       | Match text in the title              |
+ * | authorId     | Filter by author                     |
+ * | genreId      | Filter by genre                      |
+ * | minPrice/maxPrice | Limit the price range            |
+ * | page/limit   | Choose the result page and its size  |
+ *
+ * @RequestParam reads each optional value from the URL query string.
+ */
 @GetMapping
 public ApiResponse<List<BookResponse>> getAllBooks(
         @RequestParam(required = false) String search,
@@ -60,7 +73,8 @@ public ApiResponse<List<BookResponse>> getAllBooks(
         @RequestParam(required = false) BigDecimal maxPrice,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(required = false) Integer limit) {
-    Page<Book> result = bookService.getBooks(search, authorId, genreId, minPrice, maxPrice, page, limit);
+    Page<Book> result = bookService.getBooks(
+        search, authorId, genreId, minPrice, maxPrice, page, limit);
     return ApiResponse.ok("Books fetched", ..., PageMeta.from(result));
 }
 ```

@@ -108,6 +108,23 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.service.BookService;
 
+/**
+ * REST endpoints for creating, reading, updating, and deleting books.
+ *
+ * | Method | Endpoint             | Status | Description                        |
+ * |--------|----------------------|--------|------------------------------------|
+ * | GET    | /api/v1/books        | 200    | List all books                     |
+ * | GET    | /api/v1/books/{id}   | 200    | Fetch one book                     |
+ * | POST   | /api/v1/books        | 201    | Create; return Location header     |
+ * | PUT    | /api/v1/books/{id}   | 200    | Update a book                      |
+ * | DELETE | /api/v1/books/{id}   | 204    | Delete a book                      |
+ *
+ * | Key                | Explanation                                      |
+ * |--------------------|--------------------------------------------------|
+ * | @RequestBody       | Converts JSON into a Book                        |
+ * | @PathVariable      | Binds {id} from the URL to a method parameter    |
+ * | ResponseEntity     | Sets create/delete status and create Location    |
+ */
 @RestController
 @RequestMapping("/api/v1/books")
 public class BookController {
@@ -128,12 +145,12 @@ public class BookController {
         return bookService.getBookById(id);
     }
 
-    // ResponseEntity lets this endpoint set the status and headers as well as the body.
     @PostMapping
     public ResponseEntity<Book> createBook(@RequestBody Book book) {
         Book saved = bookService.createBook(book);
-        // 201 Created and Location tell the client where the new book can be fetched.
-        return ResponseEntity.created(URI.create("/api/v1/books/" + saved.getId()))
+        URI location = URI.create("/api/v1/books/" + saved.getId());
+
+        return ResponseEntity.created(location)
                 .body(saved);
     }
 
@@ -142,7 +159,6 @@ public class BookController {
         return bookService.updateBook(id, changes);
     }
 
-    // ResponseEntity is used here to return 204 No Content instead of the default 200.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);

@@ -20,6 +20,17 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.bookshop.config.BookshopProperties;
 import com.example.bookshop.dto.ApiResponse;
 
+/**
+ * REST endpoint for reading the current shop settings.
+ *
+ * | Method | Endpoint       | Status | Description                         |
+ * |--------|----------------|--------|-------------------------------------|
+ * | GET    | /api/v1/shop   | 200    | Return configured shop name/currency |
+ *
+ * | Key                    | Explanation                                      |
+ * |------------------------|--------------------------------------------------|
+ * | Constructor injection  | Provides the typed shop configuration            |
+ */
 @RestController
 @RequestMapping("/api/v1/shop")
 public class ShopController {

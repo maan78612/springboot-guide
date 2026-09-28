@@ -76,22 +76,38 @@ Import `jakarta.validation.Valid` in `BookController.java`. Add `@Valid` before 
 ```java
 import jakarta.validation.Valid;
 
-// In BookController; keep the existing controller and other imports.
+/**
+ * Create and update book endpoints with request-body validation.
+ *
+ * | Method | Endpoint            | Status | Description                |
+ * |--------|---------------------|--------|----------------------------|
+ * | POST   | /api/v1/books       | 201    | Validate and create a book |
+ * | PUT    | /api/v1/books/{id}  | 200    | Validate and update a book |
+ *
+ * | Key            | Explanation                                      |
+ * |----------------|--------------------------------------------------|
+ * | @Valid         | Checks BookRequest constraints before the method|
+ * | @RequestBody   | Converts JSON into BookRequest                  |
+ * | ResponseEntity | Sets 201 and Location on the create response    |
+ */
+// These methods belong inside BookController; keep its existing imports.
 @PostMapping
 public ResponseEntity<ApiResponse<BookResponse>> createBook(
-                // @Valid runs the constraints declared on BookRequest before this method proceeds.
                 @Valid @RequestBody BookRequest request) {
-    Book saved = bookService.createBook(request);
-        // ResponseEntity lets create return 201 Created and a Location header.
-    return ResponseEntity.created(URI.create("/api/v1/books/" + saved.getId()))
-            .body(ApiResponse.ok("Book created", BookResponse.from(saved)));
+        Book saved = bookService.createBook(request);
+        URI location = URI.create("/api/v1/books/" + saved.getId());
+
+        return ResponseEntity.created(location)
+                        .body(ApiResponse.ok("Book created", BookResponse.from(saved)));
 }
 
 @PutMapping("/{id}")
-public ApiResponse<BookResponse> updateBook(@PathVariable Long id,
-        @Valid @RequestBody BookRequest request) {
-    return ApiResponse.ok("Book updated",
-            BookResponse.from(bookService.updateBook(id, request)));
+public ApiResponse<BookResponse> updateBook(
+                @PathVariable Long id,
+                @Valid @RequestBody BookRequest request) {
+        BookResponse updated = BookResponse.from(bookService.updateBook(id, request));
+
+        return ApiResponse.ok("Book updated", updated);
 }
 ```
 

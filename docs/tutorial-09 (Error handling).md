@@ -23,6 +23,20 @@ This replaces scattered `Optional` checks and empty 404 responses.
 ## 2. Catch everything in one advice class
 
 ```java
+/**
+ * Converts application and request-validation exceptions into API responses.
+ *
+ * | Exception                       | Status | Description                   |
+ * |---------------------------------|--------|-------------------------------|
+ * | ApiException                    | varies | Uses the status from the error|
+ * | MethodArgumentNotValidException | 400    | Invalid request fields        |
+ *
+ * | Key                   | Explanation                                     |
+ * |-----------------------|-------------------------------------------------|
+ * | @RestControllerAdvice | Handles exceptions from controller requests     |
+ * | @ExceptionHandler     | Selects the exception handled by a method       |
+ * | ResponseEntity        | Sets the HTTP status and response body          |
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

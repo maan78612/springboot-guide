@@ -51,8 +51,13 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,12 +75,29 @@ import com.example.bookshop.dto.PageMeta;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.service.BookService;
 
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-
-import jakarta.validation.Valid;
-
+/**
+ * REST endpoints for searching and managing books.
+ *
+ * | Method | Endpoint                    | Status | Description                         |
+ * |--------|-----------------------------|--------|-------------------------------------|
+ * | GET    | /api/v1/books               | 200    | Search and list books               |
+ * | GET    | /api/v1/books/{id}          | 200    | Fetch one book                      |
+ * | POST   | /api/v1/books               | 201    | Create a book; includes Location    |
+ * | PUT    | /api/v1/books/{id}          | 200    | Update a book                       |
+ * | DELETE | /api/v1/books/{id}          | 200    | Soft-delete a book                  |
+ * | GET    | /api/v1/books/deleted       | 200    | List deleted books (admin)          |
+ * | POST   | /api/v1/books/{id}/restore  | 200    | Restore a book (admin)              |
+ *
+ * | Key                    | Explanation                                      |
+ * |------------------------|--------------------------------------------------|
+ * | @RequestParam          | Reads optional filters and paging from the URL   |
+ * | @PathVariable          | Binds {id} in the URL to a method parameter      |
+ * | @RequestBody           | Converts incoming JSON into BookRequest          |
+ * | @Valid                 | Runs request validation before the method        |
+ * | @AuthenticationPrincipal | Provides the authenticated JWT to write routes   |
+ * | @PreAuthorize          | Restricts admin-only endpoints                   |
+ * | ResponseEntity         | Sets the create status and Location header       |
+ */
 @RestController
 @RequestMapping("/api/v1/books")
 public class BookController {
@@ -101,33 +123,46 @@ public class BookController {
 		List<BookResponse> books = result.getContent().stream()
 				.map(BookResponse::from)
 				.toList();
+
 		return ApiResponse.ok("Books fetched", books, PageMeta.from(result));
 	}
 
 	@GetMapping("/{id}")
 	public ApiResponse<BookResponse> getBookById(@PathVariable Long id) {
-		return ApiResponse.ok("Book fetched", BookResponse.from(bookService.getBookById(id)));
+		BookResponse book = BookResponse.from(bookService.getBookById(id));
+
+		return ApiResponse.ok("Book fetched", book);
 	}
 
 	@PostMapping
-	public ResponseEntity<ApiResponse<BookResponse>> createBook(@Valid @RequestBody BookRequest request,
+	public ResponseEntity<ApiResponse<BookResponse>> createBook(
+			@Valid @RequestBody BookRequest request,
 			@AuthenticationPrincipal Jwt jwt) {
 		Book saved = bookService.createBook(request, jwt.getSubject());
+		URI location = URI.create("/api/v1/books/" + saved.getId());
+
 		return ResponseEntity
-				.created(URI.create("/api/v1/books/" + saved.getId()))
+				.created(location)
 				.body(ApiResponse.ok("Book created", BookResponse.from(saved)));
 	}
 
 	@PutMapping("/{id}")
-	public ApiResponse<BookResponse> updateBook(@PathVariable Long id,
-			@Valid @RequestBody BookRequest request, @AuthenticationPrincipal Jwt jwt) {
-		return ApiResponse.ok("Book updated",
-				BookResponse.from(bookService.updateBook(id, request, jwt.getSubject())));
+	public ApiResponse<BookResponse> updateBook(
+			@PathVariable Long id,
+			@Valid @RequestBody BookRequest request,
+			@AuthenticationPrincipal Jwt jwt) {
+		BookResponse updated = BookResponse.from(
+				bookService.updateBook(id, request, jwt.getSubject()));
+
+		return ApiResponse.ok("Book updated", updated);
 	}
 
 	@DeleteMapping("/{id}")
-	public ApiResponse<Void> deleteBook(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+	public ApiResponse<Void> deleteBook(
+			@PathVariable Long id,
+			@AuthenticationPrincipal Jwt jwt) {
 		bookService.deleteBook(id, jwt.getSubject());
+
 		return ApiResponse.ok("Book deleted", null);
 	}
 
@@ -140,12 +175,15 @@ public class BookController {
 		List<BookResponse> books = bookService.getDeletedBooks().stream()
 				.map(BookResponse::from)
 				.toList();
+
 		return ApiResponse.ok("Deleted books fetched", books);
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
 	@PostMapping("/{id}/restore")
 	public ApiResponse<BookResponse> restoreBook(@PathVariable Long id) {
-		return ApiResponse.ok("Book restored", BookResponse.from(bookService.restoreBook(id)));
+		BookResponse book = BookResponse.from(bookService.restoreBook(id));
+
+		return ApiResponse.ok("Book restored", book);
 	}
 }
