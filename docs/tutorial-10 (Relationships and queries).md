@@ -299,11 +299,13 @@ public record BookResponse(Long id, String title, AuthorSummary author,
 
 ## 4. Resolve the submitted ids in `BookService`
 
-Add `AuthorRepository` and `GenreRepository` as constructor-injected fields in `BookService` (keep its existing `BookRepository` and `BookshopProperties` dependencies):
+Add `AuthorRepository` and `GenreRepository` as constructor-injected fields in `BookService`. Also add a `BookshopProperties` field: tutorial 4 used the typed settings for the shop endpoint, and the catalog settings are added here for paging.
 
 ```java
+private final BookRepository bookRepository; // already present from tutorial 5
 private final AuthorRepository authorRepository;
 private final GenreRepository genreRepository;
+private final BookshopProperties properties;
 
 public BookService(BookRepository bookRepository, AuthorRepository authorRepository,
         GenreRepository genreRepository, BookshopProperties properties) {
@@ -361,6 +363,8 @@ private Set<Genre> resolveGenres(Set<Long> genreIds) {
 
 Add the corresponding imports: `HashSet`, `List`, `Set`, `Author`, `Genre`, `AuthorRepository`, and `GenreRepository`. Keep the existing `BookRepository` and `ApiException` imports.
 
+Also import `com.example.bookshop.config.BookshopProperties`. Its tutorial-4 example only had `shopName` and `currency`, so add the catalog settings used below.
+
 ## 5. Update the repository for derived and custom queries
 
 Add these imports and methods to `BookRepository`, which already extends `JpaRepository<Book, Long>`:
@@ -414,7 +418,51 @@ Page<Book> search(
 
 ## 6. Add paging and an allow-listed sort in the service
 
-Add this search method to `BookService`. This example assumes `BookshopProperties` from tutorial 4 is already injected and supplies the default and maximum page sizes:
+Add these settings to `application.properties`:
+
+```properties
+bookshop.catalog.default-page-size=10
+bookshop.catalog.max-page-size=100
+```
+
+Add this nested settings class and accessor to `BookshopProperties.java`. Keep its existing shop settings and accessors:
+
+```java
+private final Catalog catalog = new Catalog();
+
+public Catalog getCatalog() {
+    return catalog;
+}
+
+public static class Catalog {
+    private int defaultPageSize = 10;
+    private int maxPageSize = 100;
+
+    public int getDefaultPageSize() {
+        return defaultPageSize;
+    }
+
+    public void setDefaultPageSize(int defaultPageSize) {
+        this.defaultPageSize = defaultPageSize;
+    }
+
+    public int getMaxPageSize() {
+        return maxPageSize;
+    }
+
+    public void setMaxPageSize(int maxPageSize) {
+        this.maxPageSize = maxPageSize;
+    }
+}
+```
+
+| Key                      | Why we use it                                     |
+| ------------------------ | ------------------------------------------------- |
+| `Catalog`                | Groups page-size configuration under `bookshop.*` |
+| `getCatalog()`           | Lets `BookService` read the nested settings       |
+| JavaBean getters/setters | Let Spring bind property values into the settings |
+
+Now add this search method to `BookService`:
 
 ```java
 private static final Set<String> SORTABLE_FIELDS = Set.of("id", "title", "price");
