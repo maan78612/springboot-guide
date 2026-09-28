@@ -32,6 +32,15 @@ import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Writes API error responses for security failures raised before controllers.
+ *
+ * | Key                      | Why we use it                                    |
+ * |--------------------------|--------------------------------------------------|
+ * | AuthenticationEntryPoint | Returns 401 for missing or invalid authentication |
+ * | AccessDeniedHandler      | Returns 403 when a user lacks permission          |
+ * | ObjectMapper             | Serializes ErrorResponse as JSON                  |
+ */
 @Component
 public class ApiAuthErrorHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 

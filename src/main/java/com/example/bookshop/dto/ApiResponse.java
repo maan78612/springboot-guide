@@ -26,6 +26,18 @@ package com.example.bookshop.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Standard success body returned by the API.
+ *
+ * | Key             | Why we use it                                      |
+ * |-----------------|----------------------------------------------------|
+ * | @JsonInclude    | Omits optional fields whose value is null          |
+ * | success         | Lets clients identify a successful response        |
+ * | message         | Gives a short human-readable result                 |
+ * | T data          | Holds a response DTO or a collection of DTOs        |
+ * | meta            | Holds optional paging or other response metadata    |
+ * | ok(...) methods | Provide convenient factories with or without meta  |
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ApiResponse<T>(boolean success, String message, T data, Object meta) {
 

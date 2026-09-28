@@ -31,6 +31,17 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * Binds and validates the application's {@code bookshop.*} properties.
+ *
+ * | Key                      | Why we use it                                      |
+ * |--------------------------|----------------------------------------------------|
+ * | @ConfigurationProperties | Binds property keys to typed Java fields           |
+ * | @Validated               | Runs constraints when configuration is loaded      |
+ * | @NotBlank                | Rejects missing or blank required strings          |
+ * | @Valid                   | Also validates nested settings                     |
+ * | @Min / @Max              | Keeps numeric settings within allowed ranges       |
+ */
 @ConfigurationProperties(prefix = "bookshop")
 @Validated
 public class BookshopProperties {
@@ -87,16 +98,14 @@ public class BookshopProperties {
 	public static class Security {
 
 		@NotBlank
-		@jakarta.validation.constraints.Size(min = 32,
-				message = "jwt-secret must be at least 32 characters")
+		@jakarta.validation.constraints.Size(min = 32, message = "jwt-secret must be at least 32 characters")
 		private String jwtSecret;
 
 		@Min(5)
 		private int tokenTtlMinutes = 60;
 
 		// TUTORIAL 16: browsers from these origins may call the API.
-		private java.util.List<String> corsAllowedOrigins =
-				java.util.List.of("http://localhost:3000");
+		private java.util.List<String> corsAllowedOrigins = java.util.List.of("http://localhost:3000");
 
 		// TUTORIAL 16: login/register attempts per IP per minute.
 		@Min(1)

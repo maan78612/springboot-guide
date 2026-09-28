@@ -13,6 +13,12 @@ Files for this stage:
 ## 1. Put the whole write inside one transaction
 
 ```java
+/*
+ * | Key            | Why we use it                                   |
+ * |----------------|-------------------------------------------------|
+ * | @Transactional | Treats method writes as one unit; a runtime     |
+ * |                | exception rolls all of them back                |
+ */
 @Transactional
 public List<Book> applyAuthorDiscount(Long authorId, int percent) {
     // loop through books

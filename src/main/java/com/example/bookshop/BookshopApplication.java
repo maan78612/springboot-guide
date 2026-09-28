@@ -38,6 +38,15 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+/**
+ * Starts the Spring Boot application.
+ *
+ * | Key                           | Why we use it                                       |
+ * |-------------------------------|-----------------------------------------------------|
+ * | @SpringBootApplication        | Enables configuration, auto-configuration, scanning |
+ * | @ConfigurationPropertiesScan | Registers typed application settings as beans       |
+ * | SpringApplication.run         | Creates the context and starts the embedded server  |
+ */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class BookshopApplication {

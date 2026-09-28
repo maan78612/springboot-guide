@@ -30,6 +30,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+/**
+ * JPA entity for an account; passwords are stored only as hashes.
+ *
+ * | Key                           | Why we use it                                       |
+ * |-------------------------------|-----------------------------------------------------|
+ * | @Entity                       | Maps account objects to user_account rows           |
+ * | @Id / @GeneratedValue         | Marks the database-generated primary key             |
+ * | @Column(unique, nullable=false)| Requires each account to have a unique email       |
+ * | passwordHash                  | Stores a one-way password hash, never the raw value |
+ * | @Enumerated(EnumType.STRING)  | Stores role names, avoiding fragile numeric ordinals|
+ * | Instant                       | Records creation time as a UTC timeline value       |
+ */
 @Entity
 public class UserAccount {
 

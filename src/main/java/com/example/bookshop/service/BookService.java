@@ -67,6 +67,18 @@ import com.example.bookshop.repository.UserAccountRepository;
 import com.example.bookshop.model.Role;
 import com.example.bookshop.model.UserAccount;
 
+/**
+ * Applies catalog rules and coordinates book persistence.
+ *
+ * | Key / Annotation       | Why we use it                                     |
+ * |------------------------|---------------------------------------------------|
+ * | @Service               | Places business logic in the service layer        |
+ * | BookRepository         | Reads and writes book records                     |
+ * | Author/GenreRepository | Resolves relationship ids from client requests    |
+ * | BookshopProperties    | Applies configured page-size defaults and limits  |
+ * | @Transactional        | Makes multiple writes succeed or roll back together|
+ * | SORTABLE_FIELDS       | Allows only approved fields for client sorting    |
+ */
 @Service
 public class BookService {
 

@@ -25,6 +25,16 @@ import com.example.bookshop.model.Role;
 import com.example.bookshop.model.UserAccount;
 import com.example.bookshop.repository.UserAccountRepository;
 
+/**
+ * Creates the configured first administrator after application startup.
+ *
+ * | Key               | Why we use it                                      |
+ * |-------------------|----------------------------------------------------|
+ * | @Component        | Registers the seeder as a Spring bean              |
+ * | CommandLineRunner | Runs the seed logic after the app starts           |
+ * | PasswordEncoder   | Stores a password hash instead of a raw password   |
+ * | BookshopProperties| Reads optional admin credentials from configuration|
+ */
 @Component
 public class AdminSeeder implements CommandLineRunner {
 

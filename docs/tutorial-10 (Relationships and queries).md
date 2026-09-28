@@ -40,6 +40,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
+/**
+ * Author entity with the inverse side of the book relationship.
+ *
+ * | Key                    | Why we use it                                      |
+ * |------------------------|----------------------------------------------------|
+ * | @Entity                | Maps authors to database rows                     |
+ * | @Id / @GeneratedValue  | Marks the database-generated identifier             |
+ * | @OneToMany             | Represents one author having many books             |
+ * | mappedBy = "author"   | Points to Book.author, the owning foreign-key side  |
+ * | protected constructor  | Allows JPA to create an entity from a database row |
+ */
 @Entity
 public class Author {
 
@@ -89,6 +100,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+/**
+ * Entity for a catalog genre.
+ *
+ * | Key                   | Why we use it                                   |
+ * |-----------------------|-------------------------------------------------|
+ * | @Entity               | Maps Genre objects to rows in the genre table   |
+ * | @Id / @GeneratedValue | Marks the generated primary key                |
+ * | no reverse collection | Only maps relationships the app needs to use   |
+ */
 @Entity
 public class Genre {
 
@@ -133,15 +153,42 @@ import jakarta.persistence.ManyToOne;
 ```
 
 ```java
+/**
+ * Relationship mapping added to Book.
+ *
+ * | Key / Annotation          | Why we use it                                  |
+ * |---------------------------|------------------------------------------------|
+ * | @ManyToOne                 | Many books can reference one author            |
+ * | FetchType.LAZY             | Loads the author when the application accesses it|
+ * | optional = false           | Requires each book to have an author           |
+ * | @JoinColumn(author_id)     | Stores the author foreign key on the book row  |
+ * | @ManyToMany                | Allows each book to have multiple genres       |
+ * | @BatchSize(50)             | Batches lazy genre loading for up to 50 books  |
+ * | @JoinTable(book_genre)     | Stores book/genre links in a separate table    |
+ * | joinColumns                | Names the link table column for the Book side  |
+ * | inverseJoinColumns        | Names the link table column for the Genre side |
+ * | Set / HashSet              | Avoids duplicate genres and starts non-null    |
+ */
+// Many books can refer to one author; LAZY loads the author when accessed.
+// optional = false means every book must have an author.
 @ManyToOne(fetch = FetchType.LAZY, optional = false)
+// Stores the relationship as the author_id foreign-key column in the book table.
 @JoinColumn(name = "author_id")
 private Author author;
 
+// A book can have many genres, and each genre can belong to many books.
+// LAZY loads this collection when accessed instead of with every book query.
 @ManyToMany(fetch = FetchType.LAZY)
+// When loading genres for books in a batch, Hibernate can fetch for up to 50 books together.
 @BatchSize(size = 50)
-@JoinTable(name = "book_genre",
+// Stores the many-to-many pairs in a separate join table.
+@JoinTable(
+        name = "book_genre",
+        // The book_id column points back to the owning Book row.
         joinColumns = @JoinColumn(name = "book_id"),
+        // The genre_id column points to the related Genre row.
         inverseJoinColumns = @JoinColumn(name = "genre_id"))
+// A Set prevents duplicate genres for one book; genre order is not stored.
 private Set<Genre> genres = new HashSet<>();
 ```
 
@@ -209,6 +256,13 @@ public record BookRequest(
 }
 ```
 
+| Key / Constraint | Why we use it                                    |
+| ---------------- | ------------------------------------------------ |
+| authorId         | References an existing author without nesting it |
+| genreIds         | Optionally references existing genres            |
+| @NotNull         | Requires an author id and price                  |
+| @Positive        | Rejects zero or negative ids/prices              |
+
 Update `BookResponse.java` to return an author summary and genre names, not the full entity graph:
 
 ```java
@@ -236,6 +290,12 @@ public record BookResponse(Long id, String title, AuthorSummary author,
     }
 }
 ```
+
+| Key                   | Why we use it                              |
+| --------------------- | ------------------------------------------ |
+| AuthorSummary         | Returns just an author's id and name       |
+| `List<String> genres` | Returns readable genre names, not entities |
+| from(Book)            | Maps the entity into an API-safe response  |
 
 ## 4. Resolve the submitted ids in `BookService`
 
@@ -342,6 +402,14 @@ Page<Book> search(
         Pageable pageable);
 ```
 
+    | Key / Annotation        | Why we use it                                      |
+    |--------------------------|----------------------------------------------------|
+    | `findByAuthorId`         | Derives a query from the entity's author id        |
+    | `existsBy...`            | Checks for duplicate titles without loading a book |
+    | `@Query`                 | Defines the combined optional-filter JPQL query    |
+    | `@EntityGraph`           | Fetches the author needed by the response mapper   |
+    | `Pageable` / `Page<Book>`| Adds paging/sorting and returns page/count data    |
+
 `findByAuthorId` and `existsBy...` are derived queries: Spring builds them from the method names and entity fields. `@Query` is JPQL, so it uses entity names and Java fields. Each filter is optional when its parameter is `null`. `Pageable` supplies page, size, and sort; the returned `Page` includes the total count. `@EntityGraph` fetches the to-one author in the same query for DTO mapping.
 
 ## 6. Add paging and an allow-listed sort in the service
@@ -382,6 +450,13 @@ private Sort parseSort(String sort) {
 }
 ```
 
+| Key                 | Why we use it                                       |
+| ------------------- | --------------------------------------------------- |
+| PageRequest         | Converts page, size, and sort into a pageable query |
+| SORTABLE_FIELDS     | Allows only approved sort fields                    |
+| Math.max / Math.min | Clamps page and limit to valid configured values    |
+| leading `-` in sort | Requests descending order for an allowed field      |
+
 Add imports for `ArrayList`, `BigDecimal`, `List`, `Set`, `Page`, `PageRequest`, `Pageable`, and `Sort`. A whitelist is safer than passing arbitrary client text into a sort expression.
 
 Create `GenreRepository.java`; `findAllById` is inherited from `JpaRepository`:
@@ -396,6 +471,10 @@ import com.example.bookshop.model.Genre;
 public interface GenreRepository extends JpaRepository<Genre, Long> {
 }
 ```
+
+| Key                          | Why we use it                                    |
+| ---------------------------- | ------------------------------------------------ |
+| `JpaRepository<Genre, Long>` | Supplies `findAllById` for resolving request ids |
 
 ## 7. See and fix the N+1 query
 
@@ -418,6 +497,12 @@ public record AuthorResponse(Long id, String name, List<String> books) {
 }
 ```
 
+| Key          | Why we use it                              |
+| ------------ | ------------------------------------------ |
+| id / name    | Identifies and labels the author           |
+| books        | Returns the author's book titles as a list |
+| from(Author) | Maps the entity into the response DTO      |
+
 Create `AuthorRepository.java`. To reproduce N+1 first, make the service call the inherited `findAll()` and map with `AuthorResponse::from`; each lazy `author.getBooks()` access triggers another query. Check the SQL log, then use this fetch-join repository method to load authors and books together:
 
 ```java
@@ -436,6 +521,12 @@ public interface AuthorRepository extends JpaRepository<Author, Long> {
     List<Author> findAllWithBooks();
 }
 ```
+
+| Key / JPQL           | Why we use it                                    |
+| -------------------- | ------------------------------------------------ |
+| `left join fetch`    | Loads each author's books in the same query      |
+| `distinct`           | Removes repeated author rows from the join       |
+| `findAllWithBooks()` | Gives the service the fetch-planned author query |
 
 Create `AuthorService.java`:
 
@@ -464,6 +555,12 @@ public class AuthorService {
 }
 ```
 
+| Key                   | Why we use it                                       |
+| --------------------- | --------------------------------------------------- |
+| `@Service`            | Registers business logic for dependency injection   |
+| constructor injection | Supplies the repository without manual construction |
+| `findAllWithBooks()`  | Avoids per-author lazy queries during mapping       |
+
 Create `AuthorController.java`:
 
 ```java
@@ -479,7 +576,16 @@ import com.example.bookshop.dto.ApiResponse;
 import com.example.bookshop.dto.AuthorResponse;
 import com.example.bookshop.service.AuthorService;
 
-/** GET /api/v1/authors — list authors and their book titles. */
+/**
+ * Lists authors and their book titles.
+ *
+ * | Key             | Why we use it                                      |
+ * |-----------------|----------------------------------------------------|
+ * | @RestController | Returns the response as JSON                       |
+ * | @RequestMapping | Sets the shared `/api/v1/authors` URL prefix       |
+ * | @GetMapping     | Maps GET requests to the author-list method       |
+ * | AuthorResponse  | Keeps JPA entity objects out of the API            |
+ */
 @RestController
 @RequestMapping("/api/v1/authors")
 public class AuthorController {
@@ -525,6 +631,12 @@ public record PageMeta(long total, int page, int limit, int totalPages,
 }
 ```
 
+| Key                   | Why we use it                                           |
+| --------------------- | ------------------------------------------------------- |
+| `Page<?>`             | Provides total counts and current page information      |
+| `getNumber() + 1`     | Converts Spring's zero-based page to one-based API page |
+| `hasNext/hasPrevious` | Lets clients enable paging controls                     |
+
 ## 8. Update the book-list controller method
 
 Replace the `GET /api/v1/books` method in `BookController`. The query parameters match the service signature above; `PageMeta.from` supplies pagination information in the response envelope.
@@ -549,6 +661,12 @@ public ApiResponse<List<BookResponse>> getAllBooks(
     return ApiResponse.ok("Books fetched", books, PageMeta.from(result));
 }
 ```
+
+| Key / Annotation | Why we use it                                  |
+| ---------------- | ---------------------------------------------- |
+| `@RequestParam`  | Reads optional filters and paging from the URL |
+| `Page<Book>`     | Provides current results and paging totals     |
+| `PageMeta.from`  | Adds paging details to the response envelope   |
 
 Required imports for this method: `BigDecimal`, `List`, `Page`, `GetMapping`, `RequestParam`, `ApiResponse`, `BookResponse`, `PageMeta`, and `Book` as needed by the rest of the controller. For example, `?search=clean&authorId=2&sort=-price&page=1&limit=5` searches and sorts the first page.
 

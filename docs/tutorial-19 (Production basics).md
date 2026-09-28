@@ -17,6 +17,11 @@ Files for this stage:
 GET /actuator/health
 ```
 
+| Key / Endpoint     | Why we use it                                       |
+| ------------------ | --------------------------------------------------- |
+| Actuator           | Exposes operational and health information          |
+| `/actuator/health` | Lets deployment systems check whether the app is up |
+
 This gives infrastructure a lightweight readiness endpoint.
 
 ## 2. Build a runnable jar
@@ -38,5 +43,11 @@ DB_PASSWORD=secret
 ```
 
 Production config should be passed in at runtime, not hardcoded in the jar.
+
+| Environment key        | Purpose                                 |
+| ---------------------- | --------------------------------------- |
+| SPRING_PROFILES_ACTIVE | Selects the production property profile |
+| DB_URL                 | Selects the PostgreSQL connection       |
+| DB_USER / DB_PASSWORD  | Supplies database credentials           |
 
 Next: [**Tutorial 20 — The template**](tutorial-20%20%28The%20template%29.md)

@@ -47,6 +47,17 @@ This gives you:
 ## 2. Turn Book into an entity
 
 ```java
+/**
+ * JPA mapping from the Book class to a database row.
+ *
+ * | Key / Annotation               | Why we use it                                  |
+ * |--------------------------------|------------------------------------------------|
+ * | @Entity                        | Marks Book as a persisted database entity      |
+ * | @Id                            | Identifies the primary key                     |
+ * | @GeneratedValue(IDENTITY)      | Lets the database generate the id              |
+ * | @Column(precision=10, scale=2) | Stores the price with two decimal places       |
+ * | protected no-arg constructor   | Allows JPA to instantiate rows from the database|
+ */
 @Entity
 public class Book {
 
@@ -81,6 +92,13 @@ Important parts:
 ## 3. Replace the manual repository with Spring Data JPA
 
 ```java
+/**
+ * Spring Data creates this repository implementation at startup.
+ *
+ * | Key                       | Why we use it                                  |
+ * |---------------------------|------------------------------------------------|
+ * | JpaRepository<Book, Long> | Supplies CRUD methods for Book and its Long id |
+ */
 public interface BookRepository extends JpaRepository<Book, Long> {
 }
 ```

@@ -17,6 +17,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+/**
+ * JPA entity for one catalog genre.
+ *
+ * | Key                   | Why we use it                                    |
+ * |-----------------------|--------------------------------------------------|
+ * | @Entity               | Maps Genre objects to rows in the genre table    |
+ * | @Id / @GeneratedValue | Marks the database-generated primary key         |
+ * | protected constructor | Lets JPA create entities from database rows      |
+ */
 @Entity
 public class Genre {
 

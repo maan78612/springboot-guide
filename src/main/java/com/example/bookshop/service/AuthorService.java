@@ -16,6 +16,15 @@ import org.springframework.stereotype.Service;
 import com.example.bookshop.model.Author;
 import com.example.bookshop.repository.AuthorRepository;
 
+/**
+ * Loads author data for the author endpoints.
+ *
+ * | Key                 | Why we use it                                      |
+ * |---------------------|----------------------------------------------------|
+ * | @Service            | Registers this class as the business/service layer |
+ * | AuthorRepository    | Loads authors with their books for response mapping|
+ * | findAllWithBooks()  | Fetches the collection in one query to avoid N+1   |
+ */
 @Service
 public class AuthorService {
 

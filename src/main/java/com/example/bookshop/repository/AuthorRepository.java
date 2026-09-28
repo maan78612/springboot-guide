@@ -20,6 +20,15 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.example.bookshop.model.Author;
 
+/**
+ * Database queries for authors.
+ *
+ * | Key                    | Why we use it                                     |
+ * |------------------------|---------------------------------------------------|
+ * | JpaRepository          | Supplies standard CRUD methods                   |
+ * | left join fetch        | Loads authors and their books in one query         |
+ * | distinct               | Prevents repeated authors from joined book rows    |
+ */
 public interface AuthorRepository extends JpaRepository<Author, Long> {
 
 	@Query("select distinct a from Author a left join fetch a.books")

@@ -11,6 +11,18 @@ package com.example.bookshop.dto;
 
 import org.springframework.data.domain.Page;
 
+/**
+ * Pagination details returned in the API response's meta field.
+ *
+ * | Key              | Why we use it                                      |
+ * |------------------|----------------------------------------------------|
+ * | total            | Reports the total number of matching rows          |
+ * | page             | Reports a client-friendly, one-based page number   |
+ * | limit            | Reports the number of rows returned per page       |
+ * | totalPages       | Reports the number of available pages              |
+ * | hasNext/hasPrev  | Lets clients enable or disable paging controls     |
+ * | from(Page)       | Converts Spring's zero-based Page metadata          |
+ */
 public record PageMeta(long total, int page, int limit, int totalPages,
 		boolean hasNextPage, boolean hasPrevPage) {
 

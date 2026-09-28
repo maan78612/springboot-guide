@@ -14,6 +14,12 @@ Files for this stage:
 ## 1. Mark the entity for soft delete
 
 ```java
+/**
+ * | Key                         | Why we use it                                    |
+ * |-----------------------------|--------------------------------------------------|
+ * | @Entity                     | Maps Book objects to database rows               |
+ * | @SoftDelete(columnName=...) | Marks rows instead of physically removing them   |
+ */
 @Entity
 @SoftDelete(columnName = "deleted")
 public class Book {
@@ -33,6 +39,12 @@ List<Book> findDeleted();
 @Query(value = "update book set deleted = false where id = :id and deleted = true", nativeQuery = true)
 int restoreById(@Param("id") Long id);
 ```
+
+| Key / Annotation   | Why we use it                                       |
+| ------------------ | --------------------------------------------------- |
+| `nativeQuery=true` | Runs SQL that can see soft-deleted rows             |
+| `@Modifying`       | Marks the restore query as a database write         |
+| `@Param("id")`     | Binds the Java id argument to SQL's `:id` parameter |
 
 This lets the app list deleted rows and restore them without exposing them in normal queries.
 

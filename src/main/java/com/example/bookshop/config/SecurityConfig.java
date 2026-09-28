@@ -73,6 +73,18 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 import java.util.List;
 
+/**
+ * Builds the application's HTTP security rules and security beans.
+ *
+ * | Key                            | Why we use it                                       |
+ * |--------------------------------|-----------------------------------------------------|
+ * | @Configuration                 | Registers this class's @Bean methods with Spring    |
+ * | @EnableMethodSecurity          | Enables method rules such as @PreAuthorize         |
+ * | SecurityFilterChain            | Defines URL, JWT, CORS, and header behavior         |
+ * | SessionCreationPolicy.STATELESS| Avoids storing login sessions for this API          |
+ * | JwtEncoder / JwtDecoder        | Create tokens and validate incoming tokens         |
+ * | PasswordEncoder                | Hashes passwords before they are stored             |
+ */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -98,7 +110,8 @@ public class SecurityConfig {
 						// the URL level too (method @PreAuthorize = 2nd lock)
 						.requestMatchers(HttpMethod.GET, "/api/v1/books/deleted").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.GET,
-								"/api/v1/books/**", "/api/v1/authors/**", "/api/v1/shop").permitAll()
+								"/api/v1/books/**", "/api/v1/authors/**", "/api/v1/shop")
+						.permitAll()
 						.requestMatchers("/h2-console/**").permitAll()
 						// TUTORIAL 17: API docs. Born protected (verified: 401
 						// until these lines) - opened deliberately. Prod turns

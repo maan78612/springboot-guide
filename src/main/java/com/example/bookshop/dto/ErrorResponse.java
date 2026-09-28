@@ -14,6 +14,17 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Standard failure body returned by the API.
+ *
+ * | Key / Annotation | Why we use it                                     |
+ * |------------------|---------------------------------------------------|
+ * | @JsonInclude      | Omits errors when a failure has no field details  |
+ * | success           | Is false for every error response                 |
+ * | message           | Gives a safe, readable error summary              |
+ * | FieldViolation   | Identifies each invalid request field              |
+ * | of(...)           | Creates error responses with or without details  |
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ErrorResponse(boolean success, String message, List<FieldViolation> errors) {
 

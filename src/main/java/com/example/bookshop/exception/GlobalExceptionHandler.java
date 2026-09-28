@@ -40,6 +40,17 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import com.example.bookshop.dto.ErrorResponse;
 import com.example.bookshop.dto.ErrorResponse.FieldViolation;
 
+/**
+ * Converts exceptions from controller requests into consistent JSON errors.
+ *
+ * | Key / Handler              | Why we use it                                    |
+ * |---------------------------|--------------------------------------------------|
+ * | @RestControllerAdvice     | Applies exception handlers across controllers   |
+ * | @ExceptionHandler         | Selects the method for a matching exception      |
+ * | MethodArgumentNotValid... | Returns field violations with HTTP 400          |
+ * | Exception.class           | Logs unexpected failures and returns safe HTTP 500|
+ * | ResponseEntity            | Sets the HTTP status and error body               |
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

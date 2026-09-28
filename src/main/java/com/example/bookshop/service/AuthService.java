@@ -45,6 +45,17 @@ import com.example.bookshop.model.Role;
 import com.example.bookshop.model.UserAccount;
 import com.example.bookshop.repository.UserAccountRepository;
 
+/**
+ * Handles registration, credential checks, and JWT creation.
+ *
+ * | Key                    | Why we use it                                     |
+ * |------------------------|---------------------------------------------------|
+ * | @Service               | Registers application authentication logic       |
+ * | PasswordEncoder        | Hashes passwords and checks login guesses         |
+ * | JwtEncoder             | Signs tokens returned after successful login      |
+ * | BookshopProperties    | Supplies the configured token lifetime            |
+ * | ApiException          | Reports expected auth failures with HTTP status   |
+ */
 @Service
 public class AuthService {
 

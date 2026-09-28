@@ -46,6 +46,18 @@ import org.springframework.data.repository.query.Param;
 
 import com.example.bookshop.model.Book;
 
+/**
+ * Database access and catalog queries for books.
+ *
+ * | Key / Annotation       | Why we use it                                      |
+ * |------------------------|----------------------------------------------------|
+ * | JpaRepository          | Supplies standard CRUD and paging operations       |
+ * | findBy...              | Derives simple queries from entity property names  |
+ * | @Query                 | Defines the optional-filter catalog search         |
+ * | @EntityGraph           | Fetches the author needed for response mapping      |
+ * | Pageable / Page        | Supports sorting, paging, and total counts          |
+ * | @Modifying             | Marks custom update queries that change database rows|
+ */
 public interface BookRepository extends JpaRepository<Book, Long> {
 
 	List<Book> findByAuthorId(Long authorId);
@@ -69,8 +81,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 	List<Book> findDeleted();
 
 	@Modifying
-	@Query(value = "update book set deleted = false where id = :id and deleted = true",
-			nativeQuery = true)
+	@Query(value = "update book set deleted = false where id = :id and deleted = true", nativeQuery = true)
 	int restoreById(@Param("id") Long id);
 
 	/*
@@ -80,8 +91,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 	 ! run inside one @Transactional service method (tutorial 12).
 	 */
 	@Modifying
-	@Query(value = "update book_genre set deleted = false where book_id = :id",
-			nativeQuery = true)
+	@Query(value = "update book_genre set deleted = false where book_id = :id", nativeQuery = true)
 	void restoreGenreLinks(@Param("id") Long id);
 
 	/*

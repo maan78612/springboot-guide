@@ -43,6 +43,17 @@ import tools.jackson.databind.ObjectMapper;
  ! @WebMvcTest slice would try to build it without its dependencies
  ! (that exact failure is in the tutorial doc).
  */
+/**
+ * Limits authentication requests with an in-memory per-IP time window.
+ *
+ * | Key                  | Why we use it                                      |
+ * |----------------------|----------------------------------------------------|
+ * | OncePerRequestFilter | Runs the filter once for each servlet request     |
+ * | shouldNotFilter      | Skips requests outside authentication routes       |
+ * | ConcurrentHashMap    | Stores counters safely across request threads      |
+ * | HTTP 429             | Tells clients the configured attempt limit was hit |
+ * | ObjectMapper         | Writes the error envelope as JSON                  |
+ */
 public class RateLimitFilter extends OncePerRequestFilter {
 
 	private record Window(long startedAtMinute, AtomicInteger count) {
@@ -66,8 +77,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
 			FilterChain filterChain) throws ServletException, IOException {
 		long nowMinute = System.currentTimeMillis() / 60_000;
-		Window window = windows.compute(request.getRemoteAddr(), (ip, current) ->
-				(current == null || current.startedAtMinute() != nowMinute)
+		Window window = windows.compute(request.getRemoteAddr(),
+				(ip, current) -> (current == null || current.startedAtMinute() != nowMinute)
 						? new Window(nowMinute, new AtomicInteger())
 						: current);
 		if (window.count().incrementAndGet() > properties.getSecurity().getAuthRateLimitPerMinute()) {

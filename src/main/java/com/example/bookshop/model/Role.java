@@ -8,6 +8,14 @@
 */
 package com.example.bookshop.model;
 
+/**
+ * Roles used for account authorization.
+ *
+ * | Key  | Why we use it                                      |
+ * |------|----------------------------------------------------|
+ * | USER | Allows a seller to manage their own books           |
+ * | ADMIN| Allows staff to manage all books and admin actions  |
+ */
 public enum Role {
 	USER,
 	ADMIN

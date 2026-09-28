@@ -65,6 +65,15 @@ package com.example.bookshop.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/**
+ * Typed Java representation of the bookshop settings.
+ *
+ * | Key / Annotation         | Why we use it                                    |
+ * |--------------------------|--------------------------------------------------|
+ * | @ConfigurationProperties | Binds bookshop.* values to these fields          |
+ * | shopName / currency       | Hold configured values used by the application  |
+ * | getters and setters       | Allow Spring's property binder to read and write |
+ */
 @ConfigurationProperties(prefix = "bookshop")
 public class BookshopProperties {
 
@@ -100,6 +109,14 @@ In `BookshopApplication.java`, add the import and annotation to the existing app
 ```java
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+/**
+ * Existing application entry point with settings scanning enabled.
+ *
+ * | Key                           | Why we use it                                  |
+ * |-------------------------------|------------------------------------------------|
+ * | @SpringBootApplication        | Enables bootstrapping and component scanning  |
+ * | @ConfigurationPropertiesScan | Registers typed settings classes as beans      |
+ */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class BookshopApplication {

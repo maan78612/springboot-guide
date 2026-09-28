@@ -43,6 +43,16 @@ package com.example.bookshop.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Shared successful-response structure for API endpoints.
+ *
+ * | Key             | Why we use it                                      |
+ * |-----------------|----------------------------------------------------|
+ * | @JsonInclude    | Omits optional fields whose value is null          |
+ * | T data          | Holds one response DTO or a list of DTOs            |
+ * | meta            | Holds optional paging or other response metadata    |
+ * | ok(...)         | Creates the common successful-response form         |
+ */
 /*
  * @JsonInclude(JsonInclude.Include.NON_NULL) tells Jackson, the JSON library
  * Spring uses, to skip fields whose value is null. For example, if meta is
@@ -95,6 +105,16 @@ package com.example.bookshop.dto;
 
 import java.math.BigDecimal;
 
+/**
+ * Allow-listed fields clients may provide when writing a book.
+ *
+ * | Key          | Why we use it                                     |
+ * |--------------|---------------------------------------------------|
+ * | title/author | Client-editable book details                      |
+ * | price        | Client-provided selling price                     |
+ * | no id        | Database assigns the primary key                  |
+ * | no costPrice | Keeps internal shop cost out of requests          |
+ */
 public record BookRequest(String title, String author, BigDecimal price) {
 }
 ```
@@ -110,6 +130,15 @@ import java.math.BigDecimal;
 
 import com.example.bookshop.model.Book;
 
+/**
+ * Allow-listed public representation of a book.
+ *
+ * | Key        | Why we use it                                      |
+ * |------------|----------------------------------------------------|
+ * | record     | Defines an immutable response data carrier         |
+ * | from(...) | Maps only selected entity fields into the response  |
+ * | no costPrice | Prevents leaking internal cost to API clients    |
+ */
 public record BookResponse(Long id, String title, String author, BigDecimal price) {
 
     public static BookResponse from(Book book) {
@@ -128,6 +157,13 @@ Update the create and update methods in `BookService`. Convert the incoming requ
 
 ```java
 public Book createBook(BookRequest request) {
+    /*
+     * | Key / Call             | Why we use it                             |
+     * |------------------------|-------------------------------------------|
+     * | BookRequest            | Receives only client-allowed fields       |
+     * | new Book(...)          | Maps the request DTO into a database entity|
+     * | bookRepository.save()  | Persists the new entity                    |
+     */
     Book book = new Book(request.title(), request.author(), request.price());
     return bookRepository.save(book);
 }

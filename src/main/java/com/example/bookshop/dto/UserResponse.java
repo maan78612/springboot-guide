@@ -9,6 +9,15 @@ package com.example.bookshop.dto;
 
 import com.example.bookshop.model.UserAccount;
 
+/**
+ * Safe account details returned to API clients.
+ *
+ * | Key        | Why we use it                                      |
+ * |------------|----------------------------------------------------|
+ * | id/name    | Identifies and labels the account                 |
+ * | email/role | Returns the account identity and authorization role|
+ * | from(...)  | Maps the entity while omitting passwordHash         |
+ */
 public record UserResponse(Long id, String name, String email, String role) {
 
 	public static UserResponse from(UserAccount user) {

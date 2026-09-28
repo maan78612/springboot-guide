@@ -6,6 +6,16 @@
 */
 package com.example.bookshop.dto;
 
+/**
+ * Login response containing the bearer token and safe account details.
+ *
+ * | Key              | Why we use it                                     |
+ * |------------------|---------------------------------------------------|
+ * | token            | Carries the signed credential for later requests  |
+ * | tokenType        | Tells clients to send the token as Bearer          |
+ * | expiresInMinutes | Tells clients the token lifetime                  |
+ * | user             | Returns account details without the password hash |
+ */
 public record AuthResponse(String token, String tokenType, long expiresInMinutes,
 		UserResponse user) {
 

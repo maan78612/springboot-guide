@@ -24,20 +24,24 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Allow-listed fields a client may send when creating or updating a book.
+ *
+ * | Key / Constraint | Why we use it                                      |
+ * |------------------|----------------------------------------------------|
+ * | title / @NotBlank| Requires a non-empty book title                    |
+ * | authorId         | References an existing author without nesting it   |
+ * | genreIds         | Optionally references one or more existing genres  |
+ * | price / @Digits  | Requires a positive price with at most 2 decimals  |
+ * | no id/costPrice  | Clients cannot set database identity or internal cost |
+ */
 public record BookRequest(
 
-		@NotBlank(message = "title is required")
-		@Size(max = 200, message = "title must be at most 200 characters")
-		String title,
+		@NotBlank(message = "title is required") @Size(max = 200, message = "title must be at most 200 characters") String title,
 
-		@NotNull(message = "authorId is required")
-		@Positive(message = "authorId must be a positive number")
-		Long authorId,
+		@NotNull(message = "authorId is required") @Positive(message = "authorId must be a positive number") Long authorId,
 
 		Set<Long> genreIds,
 
-		@NotNull(message = "price is required")
-		@Positive(message = "price must be greater than 0")
-		@Digits(integer = 8, fraction = 2, message = "price must have at most 2 decimal places")
-		BigDecimal price) {
+		@NotNull(message = "price is required") @Positive(message = "price must be greater than 0") @Digits(integer = 8, fraction = 2, message = "price must have at most 2 decimal places") BigDecimal price) {
 }

@@ -29,6 +29,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
+/**
+ * JPA entity representing an author and the books associated with them.
+ *
+ * | Key                    | Why we use it                                      |
+ * |------------------------|----------------------------------------------------|
+ * | @Entity                | Maps Author objects to rows in the author table    |
+ * | @Id / @GeneratedValue  | Marks the database-generated primary key           |
+ * | @OneToMany             | Represents one author having many books            |
+ * | mappedBy = "author"   | Makes Book.author own the foreign-key mapping       |
+ * | protected constructor  | Lets JPA create entities when reading database rows|
+ */
 @Entity
 public class Author {
 

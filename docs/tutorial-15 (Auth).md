@@ -22,6 +22,15 @@ Files for this stage:
 Spring Security locks things down unless you explicitly allow endpoints.
 
 ```java
+/*
+ * | Key                                  | Why we use it                               |
+ * |--------------------------------------|---------------------------------------------|
+ * | SecurityFilterChain                  | Defines which HTTP requests may proceed     |
+ * | csrf.disable()                       | Disables CSRF for this stateless bearer-token API |
+ * | SessionCreationPolicy.STATELESS      | Avoids creating server-side login sessions  |
+ * | permitAll()                          | Leaves register/login open                  |
+ * | anyRequest().authenticated()         | Requires authentication on remaining routes |
+ */
 @Bean
 SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
@@ -37,6 +46,12 @@ SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 ## 2. Hash passwords and issue JWTs
 
 ```java
+/*
+ * | Key                         | Why we use it                                  |
+ * |-----------------------------|------------------------------------------------|
+ * | PasswordEncoder.encode(...) | Stores a password hash instead of the password|
+ * | JWT                          | Proves identity on later stateless requests    |
+ */
 String passwordHash = passwordEncoder.encode(request.password());
 String token = jwtService.generateToken(user);
 ```
@@ -51,5 +66,10 @@ POST /api/v1/auth/login
 ```
 
 Response includes a bearer token and user metadata.
+
+| Key          | Why we use it                                           |
+| ------------ | ------------------------------------------------------- |
+| Bearer token | Sends the signed credential in the Authorization header |
+| JWT claims   | Carry the subject, expiry, and role used by the API     |
 
 Next: [**Tutorial 16 — Roles and hardening**](tutorial-16%20%28Roles%20and%20hardening%29.md)

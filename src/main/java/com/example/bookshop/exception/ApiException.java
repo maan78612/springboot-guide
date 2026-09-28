@@ -20,6 +20,18 @@ package com.example.bookshop.exception;
 
 import org.springframework.http.HttpStatus;
 
+/**
+ * Expected application error carrying its HTTP status and client-safe message.
+ *
+ * | Key / Factory | Why we use it                                      |
+ * |---------------|----------------------------------------------------|
+ * | RuntimeException | Lets the error propagate without checked throws  |
+ * | status        | Preserves the response code selected by the service|
+ * | badRequest()  | Reports invalid related ids or other bad input      |
+ * | notFound()    | Reports a missing resource                         |
+ * | conflict()    | Reports duplicate or conflicting data              |
+ * | unauthorized()/forbidden() | Distinguish 401 from 403 errors       |
+ */
 public class ApiException extends RuntimeException {
 
 	private final HttpStatus status;

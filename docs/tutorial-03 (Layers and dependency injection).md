@@ -35,6 +35,14 @@ import java.util.List;
 
 import com.example.bookshop.model.Book;
 
+/**
+ * Repository boundary for book data at this tutorial stage.
+ *
+ * | Key           | Why we use it                                      |
+ * |---------------|----------------------------------------------------|
+ * | interface     | Declares data operations without handling HTTP     |
+ * | getAllBooks() | Gives the service a method to request all books     |
+ */
 public interface BookRepository {
     List<Book> getAllBooks();
 }
@@ -54,6 +62,15 @@ import org.springframework.stereotype.Service;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.BookRepository;
 
+/**
+ * Service layer that delegates book reads to the repository.
+ *
+ * | Key                    | Why we use it                                   |
+ * |------------------------|-------------------------------------------------|
+ * | @Service               | Registers this class as application logic       |
+ * | final repository field | Makes the dependency required and immutable     |
+ * | constructor injection  | Lets Spring provide the repository              |
+ */
 @Service
 public class BookService {
 

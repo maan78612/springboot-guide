@@ -93,6 +93,31 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 
+/**
+ * JPA entity for the book table. Hibernate maps its fields to database columns.
+ *
+ * | Annotation / Key                | Why we use it                                                 |
+ * |---------------------------------|---------------------------------------------------------------|
+ * | @Entity                         | Maps this class to a database table                           |
+ * | @SoftDelete                    | Marks deleted rows instead of physically removing them       |
+ * | @Id                             | Marks the primary key                                         |
+ * | @GeneratedValue(IDENTITY)       | Lets the database generate each book id                       |
+ * | @ManyToOne                      | Many books can refer to one author                            |
+ * | fetch = FetchType.LAZY          | Loads the author when accessed, not for every book query      |
+ * | optional = false                | Requires every book to have an author                         |
+ * | @JoinColumn(author_id)          | Stores the author foreign key on the book row                 |
+ * | @ManyToMany                     | Allows books and genres to relate in both directions           |
+ * | @JoinTable(book_genre)          | Stores each book/genre pair in a link table                   |
+ * | joinColumns / inverseJoinColumns | Point the link table to the book row and genre row           |
+ * | @BatchSize(50)                  | Batches lazy genre loading for up to 50 books                 |
+ * | @Column(10, 2) / BigDecimal    | Stores money as exact decimal values                          |
+ * | Set + HashSet                   | Prevents duplicate genres and initializes the collection      |
+ * | owner / @ManyToOne              | Associates an optional seller account with a listed book      |
+ * | costPrice                       | Stores internal shop cost; BookResponse does not expose it    |
+ * | protected no-arg constructor    | Lets JPA create entities while keeping normal app creation explicit |
+ *
+ * `costPrice` is internal and is omitted from BookResponse.
+ */
 @Entity
 @SoftDelete(columnName = "deleted")
 public class Book {
@@ -113,9 +138,7 @@ public class Book {
 	// don't mix with pagination; this is the pragmatic fix.)
 	@ManyToMany(fetch = FetchType.LAZY)
 	@BatchSize(size = 50)
-	@JoinTable(name = "book_genre",
-			joinColumns = @JoinColumn(name = "book_id"),
-			inverseJoinColumns = @JoinColumn(name = "genre_id"))
+	@JoinTable(name = "book_genre", joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
 	private Set<Genre> genres = new HashSet<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)

@@ -25,6 +25,15 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
+/**
+ * Provides API metadata and bearer-token security details to OpenAPI.
+ *
+ * | Key                          | Why we use it                                    |
+ * |------------------------------|--------------------------------------------------|
+ * | @Configuration               | Enables bean definitions in this class          |
+ * | @Bean                        | Registers the configured OpenAPI object          |
+ * | HTTP bearer SecurityScheme   | Documents JWT authentication for API tools       |
+ */
 @Configuration
 public class OpenApiConfig {
 

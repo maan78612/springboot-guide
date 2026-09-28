@@ -18,6 +18,15 @@ package com.example.bookshop.model;
 
 import java.math.BigDecimal;
 
+/**
+ * Plain Java model returned by the first endpoint.
+ *
+ * | Key            | Why we use it                                      |
+ * |----------------|----------------------------------------------------|
+ * | BigDecimal     | Stores money without floating-point rounding       |
+ * | private fields | Keeps object state accessed through public methods |
+ * | public getters | Lets Jackson read values and serialize JSON        |
+ */
 public class Book {
 
     private Long id;

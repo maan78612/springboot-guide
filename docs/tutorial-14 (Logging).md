@@ -13,12 +13,25 @@ Files for this stage:
 ## 1. Add a logger
 
 ```java
+/*
+ * | Key                  | Why we use it                                     |
+ * |----------------------|---------------------------------------------------|
+ * | Logger               | Sends structured messages to the logging system  |
+ * | static final         | Shares one immutable logger per class             |
+ * | LoggerFactory        | Creates a logger named for the class              |
+ */
 private static final Logger log = LoggerFactory.getLogger(BookService.class);
 ```
 
 Then log meaningful events like creates, deletes, or filter values using placeholders:
 
 ```java
+/*
+ * | Key                  | Why we use it                                     |
+ * |----------------------|---------------------------------------------------|
+ * | log.info             | Records a normal operational event                |
+ * | {} placeholders      | Inserts values without building a string eagerly  |
+ */
 log.info("Book created: id={}, title={}", saved.getId(), saved.getTitle());
 ```
 

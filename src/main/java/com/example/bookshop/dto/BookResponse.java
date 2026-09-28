@@ -17,6 +17,16 @@ import java.util.List;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.model.Genre;
 
+/**
+ * Allow-listed public representation of a book and its relationships.
+ *
+ * | Key          | Why we use it                                      |
+ * |--------------|----------------------------------------------------|
+ * | AuthorSummary| Returns only the author's id and display name      |
+ * | genres       | Returns sorted genre names instead of entities      |
+ * | from(...)    | Maps the entity graph to a client-facing DTO       |
+ * | no costPrice | Keeps the shop's internal cost out of the API      |
+ */
 public record BookResponse(Long id, String title, AuthorSummary author,
 		List<String> genres, BigDecimal price) {
 

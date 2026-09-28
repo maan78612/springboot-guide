@@ -46,6 +46,16 @@ import org.springframework.stereotype.Service;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.BookRepository;
 
+/**
+ * Book CRUD operations between the controller and repository.
+ *
+ * | Key          | Why we use it                                  |
+ * |--------------|------------------------------------------------|
+ * | @Service     | Registers business logic in the Spring context |
+ * | findById     | Loads an existing book before update/delete     |
+ * | save         | Inserts a new book or persists changes          |
+ * | delete       | Removes the selected book at this stage         |
+ */
 @Service
 public class BookService {
 
