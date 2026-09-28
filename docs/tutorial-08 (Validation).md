@@ -37,21 +37,27 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record BookRequest(
+        // Rejects null, empty, or whitespace-only titles.
         @NotBlank(message = "title is required")
+        // Limits the title to 200 characters.
         @Size(max = 200, message = "title must be at most 200 characters")
         String title,
 
+        // Rejects null, empty, or whitespace-only author names.
         @NotBlank(message = "author is required")
         String author,
 
+        // Rejects a missing/null price.
         @NotNull(message = "price is required")
+        // Requires the price to be greater than zero.
         @Positive(message = "price must be greater than 0")
+        // Allows up to 8 digits before and 2 digits after the decimal point.
         @Digits(integer = 8, fraction = 2, message = "price must have at most 2 decimal places")
         BigDecimal price) {
 }
 ```
 
-Use `jakarta.validation.constraints.NotBlank`, not `org.hibernate.validator.constraints.NotBlank`. `@NotBlank` rejects null, empty, or whitespace-only text; `@NotNull` rejects a missing value; `@Positive` rejects zero and negative numbers; and `@Size` limits the title length.
+Use `jakarta.validation.constraints.NotBlank`, not `org.hibernate.validator.constraints.NotBlank`. Each annotation checks a rule when Spring validates the request.
 
 ## 3. Run validation for request bodies
 
@@ -62,7 +68,9 @@ import jakarta.validation.Valid;
 
 // In BookController; keep the existing controller and other imports.
 @PostMapping
-public ResponseEntity<ApiResponse<BookResponse>> createBook(@Valid @RequestBody BookRequest request) {
+public ResponseEntity<ApiResponse<BookResponse>> createBook(
+                // @Valid runs the constraints declared on BookRequest before this method proceeds.
+                @Valid @RequestBody BookRequest request) {
     Book saved = bookService.createBook(request);
         // ResponseEntity lets create return 201 Created and a Location header.
     return ResponseEntity.created(URI.create("/api/v1/books/" + saved.getId()))
