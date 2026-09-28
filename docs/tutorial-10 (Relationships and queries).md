@@ -49,6 +49,8 @@ public class Author {
 
     private String name;
 
+    // One author can have many books. Book.author owns the foreign key;
+    // mappedBy points to that field, so this side does not create another join table.
     @OneToMany(mappedBy = "author")
     private List<Book> books = new ArrayList<>();
 
