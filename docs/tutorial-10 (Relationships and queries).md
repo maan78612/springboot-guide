@@ -26,7 +26,7 @@ These examples build on the version from tutorials 7-9. Tutorial 18 later replac
 
 ## 1. Create the Author and Genre entities
 
-Create `Author.java`. The `mappedBy` value must match the field name on the owning side, which will be `Book.author`:
+Create `Author.java`. JPA reads this relationship in two steps: `List<Book>` tells it to look at the `Book` entity, and `mappedBy = "author"` tells it to use the `author` field inside `Book`. Together, that means `Book["author"]`; the type identifies the class, while the string is a field name. If you changed the collection to `List<Genre>`, JPA would instead look for `Genre.author` and fail at startup if that field does not exist.
 
 ```java
 package com.example.bookshop.model;
@@ -60,8 +60,10 @@ public class Author {
 
     private String name;
 
-    // One author can have many books. Book.author owns the foreign key;
-    // mappedBy points to that field, so this side does not create another join table.
+    // JPA reads this in two steps: List<Book> selects the Book entity, then
+    // mappedBy = "author" selects the field named author inside Book (Book.author).
+    // Think Book["author"]: the type picks the class, and the string is its field name.
+    // If Book has no author field, JPA fails while validating the mapping at startup.
     @OneToMany(mappedBy = "author")
     private List<Book> books = new ArrayList<>();
 
@@ -152,6 +154,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 ```
 
+The `Author` type on the field identifies the target entity, and `@ManyToOne` says many books may reference the same author. This side owns the relationship. `@JoinColumn(name = "author_id")` names the database foreign-key column on the book row; it is different from `mappedBy = "author"`, which names the Java field `Book.author`. `optional = false` requires an author, while `FetchType.LAZY` defers loading it until accessed.
+
 ```java
 /**
  * Relationship mapping added to Book.
@@ -169,10 +173,12 @@ import jakarta.persistence.ManyToOne;
  * | inverseJoinColumns        | Names the link table column for the Genre side |
  * | Set / HashSet              | Avoids duplicate genres and starts non-null    |
  */
-// Many books can refer to one author; LAZY loads the author when accessed.
-// optional = false means every book must have an author.
+// The Author field type tells JPA which entity this relationship targets.
+// @ManyToOne means many books can reference one author; this is the owning side.
+// @JoinColumn names the database foreign-key column on the book row: author_id.
+// Author.books uses mappedBy = "author" to point back to this Java field, not that column.
+// optional = false requires an author; LAZY defers loading it until accessed.
 @ManyToOne(fetch = FetchType.LAZY, optional = false)
-// Stores the relationship as the author_id foreign-key column in the book table.
 @JoinColumn(name = "author_id")
 private Author author;
 

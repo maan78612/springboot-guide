@@ -49,6 +49,8 @@ public class Author {
 
 	private String name;
 
+	// List<Book> tells JPA to inspect Book; mappedBy names the field in that class.
+	// This is equivalent to Book["author"]. If Book has no author field, startup fails.
 	@OneToMany(mappedBy = "author")
 	private List<Book> books = new ArrayList<>();
 

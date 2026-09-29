@@ -128,6 +128,10 @@ public class Book {
 
 	private String title;
 
+	// The Author field type tells JPA which entity this relationship targets.
+	// @ManyToOne means many books can reference one author; this side owns the relationship.
+	// @JoinColumn names the foreign-key column on the book row: author_id.
+	// Author.books uses mappedBy = "author" to point to this Java field, not that column.
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "author_id")
 	private Author author;
