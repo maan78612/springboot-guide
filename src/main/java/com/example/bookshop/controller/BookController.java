@@ -1,6 +1,5 @@
 package com.example.bookshop.controller;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,13 +7,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bookshop.model.Book;
+import com.example.bookshop.service.BookService;
 
 /**
- * First REST endpoint for listing books.
+ * Book HTTP endpoints. The controller delegates data work to BookService.
  *
  * | Method | Endpoint       | Status | Description          |
  * |--------|----------------|--------|----------------------|
- * | GET    | /api/v1/books  | 200    | Return sample books  |
+ * | GET    | /api/v1/books  | 200    | List all books       |
  *
  * | Key             | Explanation                                      |
  * |-----------------|--------------------------------------------------|
@@ -26,11 +26,14 @@ import com.example.bookshop.model.Book;
 @RequestMapping("/api/v1/books")
 public class BookController {
 
+    private final BookService bookService;
+
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
+    }
+
     @GetMapping
     public List<Book> getAllBooks() {
-        return List.of(
-                new Book(1L, "Effective Java", "Joshua Bloch", new BigDecimal("54.99")),
-                new Book(2L, "Clean Code", "Robert C. Martin", new BigDecimal("42.50"))
-        );
+        return bookService.getAllBooks();
     }
 }
