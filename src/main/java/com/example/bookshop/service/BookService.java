@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +33,7 @@ import com.example.bookshop.repository.GenreRepository;
  * |-----------------------|-----------------------------------------------------|
  * | @Service              | Registers business logic in the Spring context      |
  * | constructor injection | Wires required repositories and properties          |
+ * | log (SLF4J)           | Logs domain events and debug diagnostics            |
  * | getBooks              | Implements filtered search with allow-listed sort   |
  * | PageRequest           | Converts page, size, and sort into a pageable query |
  * | SORTABLE_FIELDS       | Whitelists allowed sort fields                      |
@@ -41,7 +44,10 @@ import com.example.bookshop.repository.GenreRepository;
 @Service
 public class BookService {
 
+    private static final Logger log = LoggerFactory.getLogger(BookService.class);
+
     private static final Set<String> SORTABLE_FIELDS = Set.of("id", "title", "price");
+
 
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
@@ -72,7 +78,9 @@ public class BookService {
 
         Book book = new Book(request.title(), resolveAuthor(request.authorId()), request.price());
         book.setGenres(resolveGenres(request.genreIds()));
-        return bookRepository.save(book);
+        Book saved = bookRepository.save(book);
+        log.info("Book created: id={}, title={}, authorId={}", saved.getId(), saved.getTitle(), request.authorId());
+        return saved;
     }
 
     public Book updateBook(Long id, BookRequest changes) {
@@ -85,12 +93,15 @@ public class BookService {
         book.setAuthor(resolveAuthor(changes.authorId()));
         book.setGenres(resolveGenres(changes.genreIds()));
         book.setPrice(changes.price());
-        return bookRepository.save(book);
+        Book saved = bookRepository.save(book);
+        log.info("Book updated: id={}, title={}, authorId={}", saved.getId(), saved.getTitle(), changes.authorId());
+        return saved;
     }
 
     public void deleteBook(Long id) {
         Book book = getBookById(id);
         bookRepository.delete(book);
+        log.info("Book deleted: id={}", id);
     }
 
     @Transactional
@@ -112,6 +123,7 @@ public class BookService {
             bookRepository.save(book);
         }
 
+        log.info("Applied {}% discount to {} books of author {}", percent, books.size(), authorId);
         return books;
     }
 
@@ -123,6 +135,9 @@ public class BookService {
         int size = limit == null ? defaultSize : Math.min(Math.max(limit, 1), maxSize);
         Pageable pageable = PageRequest.of(pageIndex, size, parseSort(sort));
         String normalizedSearch = search == null || search.isBlank() ? null : search.trim();
+
+        log.debug("Book search: search={}, authorId={}, genreId={}, minPrice={}, maxPrice={}, page={}, size={}",
+                normalizedSearch, authorId, genreId, minPrice, maxPrice, pageIndex + 1, size);
 
         return bookRepository.search(normalizedSearch, authorId, genreId,
                 minPrice, maxPrice, pageable);
