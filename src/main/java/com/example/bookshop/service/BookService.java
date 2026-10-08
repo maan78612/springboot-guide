@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.example.bookshop.dto.BookRequest;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.BookRepository;
 
@@ -35,15 +36,16 @@ public class BookService {
                 .orElseThrow(() -> new RuntimeException("Book not found: " + id));
     }
 
-    public Book createBook(Book book) {
+    public Book createBook(BookRequest request) {
+        Book book = new Book(request.title(), request.author(), request.price());
         return bookRepository.save(book);
     }
 
-    public Book updateBook(Long id, Book changes) {
+    public Book updateBook(Long id, BookRequest changes) {
         Book book = getBookById(id);
-        book.setTitle(changes.getTitle());
-        book.setAuthor(changes.getAuthor());
-        book.setPrice(changes.getPrice());
+        book.setTitle(changes.title());
+        book.setAuthor(changes.author());
+        book.setPrice(changes.price());
         return bookRepository.save(book);
     }
 

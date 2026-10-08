@@ -13,25 +13,29 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.bookshop.dto.ApiResponse;
+import com.example.bookshop.dto.BookRequest;
+import com.example.bookshop.dto.BookResponse;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.service.BookService;
 
 /**
- * REST endpoints for creating, reading, updating, and deleting books.
+ * Book REST endpoints using request/response DTOs and a response envelope.
  *
- * | Method | Endpoint             | Status | Description                        |
- * |--------|----------------------|--------|------------------------------------|
- * | GET    | /api/v1/books        | 200    | List all books                     |
- * | GET    | /api/v1/books/{id}   | 200    | Fetch one book                     |
- * | POST   | /api/v1/books        | 201    | Create; return Location header     |
- * | PUT    | /api/v1/books/{id}   | 200    | Update a book                      |
- * | DELETE | /api/v1/books/{id}   | 204    | Delete a book                      |
+ * | Method | Endpoint             | Status | Description                    |
+ * |--------|----------------------|--------|--------------------------------|
+ * | GET    | /api/v1/books        | 200    | Return enveloped book list     |
+ * | GET    | /api/v1/books/{id}   | 200    | Return one enveloped book      |
+ * | POST   | /api/v1/books        | 201    | Create; include Location       |
+ * | PUT    | /api/v1/books/{id}   | 200    | Update a book                  |
+ * | DELETE | /api/v1/books/{id}   | 200    | Delete a book                  |
  *
  * | Key                | Explanation                                      |
  * |--------------------|--------------------------------------------------|
- * | @RequestBody       | Converts JSON into a Book                        |
+ * | @RequestBody       | Converts JSON into BookRequest                   |
  * | @PathVariable      | Binds {id} from the URL to a method parameter    |
- * | ResponseEntity     | Sets create/delete status and create Location    |
+ * | ResponseEntity     | Sets create status and Location header           |
+ * | ApiResponse        | Gives responses a consistent JSON body           |
  */
 @RestController
 @RequestMapping("/api/v1/books")
@@ -44,32 +48,41 @@ public class BookController {
     }
 
     @GetMapping
-    public List<Book> getAllBooks() {
-        return bookService.getAllBooks();
+    public ApiResponse<List<BookResponse>> getAllBooks() {
+        List<BookResponse> books = bookService.getAllBooks().stream()
+                .map(BookResponse::from)
+                .toList();
+
+        return ApiResponse.ok("Books fetched", books);
     }
 
     @GetMapping("/{id}")
-    public Book getBookById(@PathVariable Long id) {
-        return bookService.getBookById(id);
+    public ApiResponse<BookResponse> getBookById(@PathVariable Long id) {
+        BookResponse book = BookResponse.from(bookService.getBookById(id));
+
+        return ApiResponse.ok("Book fetched", book);
     }
 
     @PostMapping
-    public ResponseEntity<Book> createBook(@RequestBody Book book) {
-        Book saved = bookService.createBook(book);
+    public ResponseEntity<ApiResponse<BookResponse>> createBook(@RequestBody BookRequest request) {
+        Book saved = bookService.createBook(request);
         URI location = URI.create("/api/v1/books/" + saved.getId());
 
         return ResponseEntity.created(location)
-                .body(saved);
+                .body(ApiResponse.ok("Book created", BookResponse.from(saved)));
     }
 
     @PutMapping("/{id}")
-    public Book updateBook(@PathVariable Long id, @RequestBody Book changes) {
-        return bookService.updateBook(id, changes);
+    public ApiResponse<BookResponse> updateBook(@PathVariable Long id,
+            @RequestBody BookRequest request) {
+        return ApiResponse.ok("Book updated",
+                BookResponse.from(bookService.updateBook(id, request)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+    public ApiResponse<Void> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);
-        return ResponseEntity.noContent().build();
+
+        return ApiResponse.ok("Book deleted", null);
     }
 }

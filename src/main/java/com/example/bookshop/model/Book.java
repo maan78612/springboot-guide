@@ -32,6 +32,9 @@ public class Book {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
+    @Column(precision = 10, scale = 2)
+    private BigDecimal costPrice;
+
     protected Book() {
     }
 
@@ -67,5 +70,13 @@ public class Book {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public BigDecimal getCostPrice() {
+        return costPrice;
+    }
+
+    public void setCostPrice(BigDecimal costPrice) {
+        this.costPrice = costPrice;
     }
 }
