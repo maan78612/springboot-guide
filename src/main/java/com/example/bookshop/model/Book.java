@@ -2,24 +2,40 @@ package com.example.bookshop.model;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
 /**
- * Plain Java model returned by the first endpoint.
+ * JPA mapping from the Book class to a database row.
  *
- * | Key            | Why we use it                                      |
- * |----------------|----------------------------------------------------|
- * | BigDecimal     | Stores money without floating-point rounding       |
- * | private fields | Keeps object state accessed through public methods |
- * | public getters | Lets Jackson read values and serialize JSON        |
+ * | Key / Annotation               | Why we use it                                  |
+ * |--------------------------------|------------------------------------------------|
+ * | @Entity                        | Marks Book as a persisted database entity      |
+ * | @Id                            | Identifies the primary key                     |
+ * | @GeneratedValue(IDENTITY)      | Lets the database generate the id              |
+ * | @Column(precision=10, scale=2) | Stores the price with two decimal places       |
+ * | protected no-arg constructor   | Allows JPA to instantiate rows from the database|
  */
+@Entity
 public class Book {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String title;
     private String author;
+
+    @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
-    public Book(Long id, String title, String author, BigDecimal price) {
-        this.id = id;
+    protected Book() {
+    }
+
+    public Book(String title, String author, BigDecimal price) {
         this.title = title;
         this.author = author;
         this.price = price;

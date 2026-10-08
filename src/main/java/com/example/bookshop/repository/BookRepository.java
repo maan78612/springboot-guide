@@ -1,17 +1,15 @@
 package com.example.bookshop.repository;
 
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.bookshop.model.Book;
 
 /**
- * Repository boundary for book data at this tutorial stage.
+ * Spring Data creates this repository implementation at startup.
  *
- * | Key           | Why we use it                                      |
- * |---------------|----------------------------------------------------|
- * | interface     | Declares data operations without handling HTTP     |
- * | getAllBooks() | Gives the service a method to request all books     |
+ * | Key                       | Why we use it                                  |
+ * |---------------------------|------------------------------------------------|
+ * | JpaRepository<Book, Long> | Supplies CRUD methods for Book and its Long id |
  */
-public interface BookRepository {
-    List<Book> getAllBooks();
+public interface BookRepository extends JpaRepository<Book, Long> {
 }
