@@ -33,7 +33,7 @@ import jakarta.persistence.ManyToOne;
  * | joinColumns                | Names the link table column for the Book side    |
  * | inverseJoinColumns         | Names the link table column for the Genre side   |
  * | Set / HashSet              | Avoids duplicate genres and starts non-null      |
- * | @SoftDelete(columnName=...) | Marks rows instead of physically removing them   |
+ * | @SoftDelete(columnName=...)| Marks rows instead of physically removing them   |
  */
 @Entity
 public class Book {

@@ -1,6 +1,7 @@
 package com.example.bookshop.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.bookshop.config.BookshopProperties;
 import com.example.bookshop.dto.BookRequest;
@@ -34,6 +36,7 @@ import com.example.bookshop.repository.GenreRepository;
  * | SORTABLE_FIELDS       | Whitelists allowed sort fields                      |
  * | resolveAuthor         | Verifies and fetches related Author entity          |
  * | resolveGenres         | Verifies and fetches related Genre entities         |
+ * | @Transactional        | Runs bulk discount updates as an atomic transaction |
  */
 @Service
 public class BookService {
@@ -88,6 +91,28 @@ public class BookService {
     public void deleteBook(Long id) {
         Book book = getBookById(id);
         bookRepository.delete(book);
+    }
+
+    @Transactional
+    public List<Book> applyAuthorDiscount(Long authorId, int percent) {
+        if (!authorRepository.existsById(authorId)) {
+            throw ApiException.notFound("Author with id " + authorId + " not found");
+        }
+
+        BigDecimal factor = BigDecimal.valueOf(100 - percent).movePointLeft(2);
+        List<Book> books = bookRepository.findByAuthorId(authorId);
+
+        for (Book book : books) {
+            BigDecimal newPrice = book.getPrice().multiply(factor).setScale(2, RoundingMode.HALF_UP);
+            if (book.getCostPrice() != null && newPrice.compareTo(book.getCostPrice()) < 0) {
+                throw ApiException.conflict("A " + percent + "% discount would push '"
+                        + book.getTitle() + "' below its cost price");
+            }
+            book.setPrice(newPrice);
+            bookRepository.save(book);
+        }
+
+        return books;
     }
 
     public Page<Book> getBooks(String search, Long authorId, Long genreId,
