@@ -766,16 +766,142 @@ WHERE (b.title = 'Effective Java' AND g.name IN ('Programming', 'Java'))
 
 The script runs after Hibernate creates the tables, as configured in tutorial 5. In tutorial 18, these inserts move into Flyway migration files.
 
-## 10. Verify the endpoints
+## 10. Entity Relationship (ER) Diagram
+
+```mermaid
+erDiagram
+    AUTHOR ||--o{ BOOK : writes
+    BOOK }o--o{ GENRE : categorized_under
+
+    AUTHOR {
+        bigint id PK
+        varchar name
+    }
+
+    BOOK {
+        bigint id PK
+        varchar title
+        bigint author_id FK
+        decimal price
+        decimal cost_price
+    }
+
+    GENRE {
+        bigint id PK
+        varchar name
+    }
+
+    BOOK_GENRE {
+        bigint book_id PK, FK
+        bigint genre_id PK, FK
+    }
+```
+
+## 11. Verify the endpoints
+
+Start the application:
+
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
+
+### 1. Filtered, sorted, and paginated books
 
 ```bash
 curl 'http://localhost:8080/api/v1/books?search=clean&authorId=2&sort=-price&page=1&limit=5'
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "message": "Books fetched",
+  "data": [
+    {
+      "id": 2,
+      "title": "Clean Code",
+      "author": {
+        "id": 2,
+        "name": "Robert C. Martin"
+      },
+      "genres": [
+        "Programming",
+        "Software Design"
+      ],
+      "price": 42.50
+    },
+    {
+      "id": 4,
+      "title": "Clean Architecture",
+      "author": {
+        "id": 2,
+        "name": "Robert C. Martin"
+      },
+      "genres": [
+        "Software Design"
+      ],
+      "price": 39.99
+    }
+  ],
+  "meta": {
+    "total": 2,
+    "page": 1,
+    "limit": 5,
+    "totalPages": 1,
+    "hasNextPage": false,
+    "hasPrevPage": false
+  }
+}
+```
+
+### 2. Authors with fetched books (N+1 query solved)
+
+```bash
 curl 'http://localhost:8080/api/v1/authors'
 ```
 
-The book list includes flattened author/genre data and pagination metadata. The authors endpoint returns book titles without an N+1 query after the fetch-join change.
+Response:
 
-## Common mistakes
+```json
+{
+  "success": true,
+  "message": "Authors fetched",
+  "data": [
+    {
+      "id": 1,
+      "name": "Joshua Bloch",
+      "books": [
+        "Effective Java"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Robert C. Martin",
+      "books": [
+        "Clean Architecture",
+        "Clean Code"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Andrew Hunt",
+      "books": [
+        "The Pragmatic Programmer"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Martin Fowler",
+      "books": [
+        "Refactoring"
+      ]
+    }
+  ]
+}
+```
+
+## 12. Common mistakes
 
 - Leaving `Book.author` as a `String` after changing the request to `authorId`.
 - Omitting `mappedBy = "author"` from `Author.books`, which creates an unnecessary extra join table.
@@ -784,3 +910,4 @@ The book list includes flattened author/genre data and pagination metadata. The 
 - Using incomplete derived-query names or misspelling an entity field; Spring Data detects invalid names at startup.
 
 Next: [**Tutorial 11 — Soft delete**](tutorial-11%20%28Soft%20delete%29.md)
+

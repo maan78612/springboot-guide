@@ -280,4 +280,93 @@ public class BookController {
 
 Returning the entity directly could expose internal fields such as `costPrice`. A response DTO is an allow-list: only the fields declared in `BookResponse` are sent to the client.
 
+```mermaid
+flowchart LR
+    Client([HTTP Client]) -->|JSON Payload| RequestDTO["BookRequest (DTO)<br/>(no id, no costPrice)"]
+    RequestDTO -->|Service maps| Entity["Book (JPA Entity)<br/>(id, title, author, price, costPrice)"]
+    Entity -->|Saved to DB| DB[(Database)]
+    Entity -->|Response mapper| ResponseDTO["BookResponse (DTO)<br/>(public view only)"]
+    ResponseDTO -->|Wrapped in| Envelope["ApiResponse&lt;T&gt;<br/>(success, message, data, meta)"]
+    Envelope -->|Serialized to JSON| Client
+```
+
+### Why Java Records for DTOs?
+
+1. **Immutability by default**: Fields are `final`, preventing unintended mutation across service and controller layers.
+2. **Boilerplate reduction**: The compiler generates accessors (`title()`, `author()`, `price()`), `equals()`, `hashCode()`, and `toString()`.
+3. **Transparent data carrier**: Clearly signals that the class is intended purely for transferring data across architectural boundaries, not for holding complex mutable business logic.
+
+## 7. Try the enveloped endpoints
+
+Start the app:
+
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
+
+### 1. Fetch all books (GET)
+
+```bash
+curl http://localhost:8080/api/v1/books
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "message": "Books fetched",
+  "data": [
+    {
+      "id": 1,
+      "title": "Effective Java",
+      "author": "Joshua Bloch",
+      "price": 54.99
+    },
+    {
+      "id": 2,
+      "title": "Clean Code",
+      "author": "Robert C. Martin",
+      "price": 42.5
+    },
+    {
+      "id": 3,
+      "title": "The Pragmatic Programmer",
+      "author": "Andrew Hunt",
+      "price": 49.95
+    }
+  ]
+}
+```
+
+Notice that `costPrice` is completely absent from the JSON payload.
+
+### 2. Create a book (POST)
+
+```bash
+curl -i -X POST http://localhost:8080/api/v1/books \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Design Patterns","author":"Erich Gamma","price":55.00}'
+```
+
+Response:
+
+```http
+HTTP/1.1 201 Created
+Location: /api/v1/books/4
+Content-Type: application/json
+
+{
+  "success": true,
+  "message": "Book created",
+  "data": {
+    "id": 4,
+    "title": "Design Patterns",
+    "author": "Erich Gamma",
+    "price": 55.0
+  }
+}
+```
+
 Next: [**Tutorial 08 — Validation**](tutorial-08%20%28Validation%29.md)
+

@@ -18,6 +18,13 @@ The repository should handle data access.
 
 Flow:
 
+```mermaid
+graph LR
+    Client([HTTP Client]) -->|JSON / HTTP| Controller["BookController (@RestController)"]
+    Controller -->|Method Calls| Service["BookService (@Service)"]
+    Service -->|Data Access| Repository["BookRepository (@Repository)"]
+```
+
 ```text
 controller -> service -> repository
 ```
@@ -26,7 +33,9 @@ This keeps the app easier to expand later.
 
 ## 2. Simple repository example
 
-At this stage, the repository can be a simple interface.
+At this stage, the repository acts as the boundary for data access.
+
+If you declare a repository interface:
 
 ```java
 package com.example.bookshop.repository;
@@ -48,7 +57,42 @@ public interface BookRepository {
 }
 ```
 
-Later, this becomes a full JPA repository with real database methods.
+> [!IMPORTANT]
+> **Spring requires a concrete Bean to instantiate.**
+> An interface alone cannot be instantiated by Spring without an implementing class. To make the application run right now before we introduce database persistence in Tutorial 05, provide an `@Repository` class that holds the sample data:
+
+```java
+package com.example.bookshop.repository;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import com.example.bookshop.model.Book;
+
+/**
+ * Concrete repository bean providing sample books for dependency injection.
+ *
+ * | Key           | Why we use it                                      |
+ * |---------------|----------------------------------------------------|
+ * | @Repository   | Registers this class as a Spring Bean in context   |
+ * | getAllBooks() | Returns sample books without needing a database    |
+ */
+@Repository
+public class BookRepository {
+
+    public List<Book> getAllBooks() {
+        return List.of(
+                new Book(1L, "Effective Java", "Joshua Bloch", new BigDecimal("54.99")),
+                new Book(2L, "Clean Code", "Robert C. Martin", new BigDecimal("42.50"))
+        );
+    }
+}
+```
+
+Later, in Tutorial 05, this becomes a full Spring Data JPA repository interface (`public interface BookRepository extends JpaRepository<Book, Long>`), where Spring automatically creates the implementation bean proxy at startup.
+
 
 ## 3. Service with constructor injection
 
@@ -139,7 +183,7 @@ Now the controller is thin and focused on HTTP only.
 
 ## 5. Why constructor injection is preferred
 
-This pattern is used:
+This pattern is used throughout modern Spring development:
 
 ```java
 private final BookRepository bookRepository;
@@ -149,12 +193,27 @@ public BookService(BookRepository bookRepository) {
 }
 ```
 
+```mermaid
+flowchart TD
+    subgraph "Spring Application Context (IoC Container)"
+        direction TB
+        Repo["1. Instantiates BookRepository<br/>(@Repository bean)"]
+        Service["2. Instantiates BookService<br/>(@Service bean) with BookRepository injected"]
+        Controller["3. Instantiates BookController<br/>(@RestController bean) with BookService injected"]
+        Repo -->|Injected into constructor| Service
+        Service -->|Injected into constructor| Controller
+    end
+```
+
 Benefits:
 
-- clear dependencies
-- easier to test
-- no manual `new` calls for app layers
-- Spring wires the object automatically
+- **Immutable dependencies**: `final` fields prevent reassigning dependencies after construction.
+- **Fail-fast instantiation**: If a required bean is missing, Spring fails at startup rather than throwing a `NullPointerException` later at runtime.
+- **Trivial unit testing**: You can instantiate `new BookService(mockRepository)` in a test without needing reflection or starting a full Spring test runner.
+- **No manual wiring**: No `new` calls in production code; Spring resolves and wires the dependency graph automatically.
+
+> [!NOTE]
+> In Spring Boot 4 / Spring Framework 6+, if a class has a single constructor, you do **not** need the `@Autowired` annotation on that constructor. Spring automatically treats it as the injection target.
 
 ## 6. Run it
 
@@ -168,29 +227,49 @@ Then call:
 curl http://localhost:8080/api/v1/books
 ```
 
-The response should still be the same as in tutorial 02.
+The response should still be the same as in tutorial 02:
 
-## 7. Common error
-
-If you see:
-
-```text
-required a bean of type 'BookRepository' that could not be found
+```json
+[
+  {
+    "id": 1,
+    "title": "Effective Java",
+    "author": "Joshua Bloch",
+    "price": 54.99
+  },
+  {
+    "id": 2,
+    "title": "Clean Code",
+    "author": "Robert C. Martin",
+    "price": 42.5
+  }
+]
 ```
 
-then usually:
+## 7. Common errors and how to fix them
 
-- the class is missing a Spring annotation
-- the class is outside the scanned package
-- the dependency type does not match the bean
+**Error 1 — Missing bean definition:**
+
+```text
+Parameter 0 of constructor in com.example.bookshop.service.BookService required a bean of type 'com.example.bookshop.repository.BookRepository' that could not be found.
+```
+
+Fix:
+- Ensure `BookRepository` is annotated with `@Repository` (or implements an interface with an `@Repository` implementation).
+- Verify the class is inside `com.example.bookshop` (or a subpackage) so Spring's `@SpringBootApplication` component scan discovers it.
+
+**Error 2 — Circular dependency:**
+
+If Service A injects Service B and Service B injects Service A, Spring fails startup with a circular reference error. Separate the responsibilities into distinct layers or a shared helper service.
 
 ## 8. Goal for this tutorial
 
 By the end of this tutorial, you should understand:
 
 - why controller/service/repository are separated
-- what dependency injection means
-- why constructor injection is used
-- how Spring wires beans together
+- what dependency injection and Inversion of Control (IoC) mean
+- why constructor injection is the industry standard
+- how Spring wires beans together in the application context
 
 Next: [**Tutorial 04 — Configuration**](tutorial-04%20%28Configuration%29.md)
+

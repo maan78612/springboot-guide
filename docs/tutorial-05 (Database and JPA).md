@@ -46,7 +46,19 @@ This gives you:
 
 ## 2. Turn Book into an entity
 
+Add JPA annotations to `Book.java`. The protected no-argument constructor is required by Hibernate to instantiate entities via reflection. Keep all public getters so Jackson can serialize the entity to JSON:
+
 ```java
+package com.example.bookshop.model;
+
+import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
 /**
  * JPA mapping from the Book class to a database row.
  *
@@ -79,19 +91,44 @@ public class Book {
         this.author = author;
         this.price = price;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
 }
 ```
 
 Important parts:
 
-- `@Entity` → map this class to a database table
+- `@Entity` → map this class to a database table named `book`
 - `@Id` → primary key
-- `@GeneratedValue` → database generates the id
-- no-arg constructor → required by JPA
+- `@GeneratedValue(strategy = GenerationType.IDENTITY)` → database auto-increments the ID
+- protected no-arg constructor → required by JPA/Hibernate proxy mechanism
+- public getters → required by Jackson for JSON serialization
 
 ## 3. Replace the manual repository with Spring Data JPA
 
+Create/replace `BookRepository.java` as an interface extending `JpaRepository`:
+
 ```java
+package com.example.bookshop.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.bookshop.model.Book;
+
 /**
  * Spring Data creates this repository implementation at startup.
  *
@@ -102,6 +139,7 @@ Important parts:
 public interface BookRepository extends JpaRepository<Book, Long> {
 }
 ```
+
 
 This gives you methods such as:
 
@@ -185,19 +223,69 @@ This lets you inspect the database directly.
 
 If this URL returns 404 with `No static resource h2-console`, check that the `spring-boot-h2console` dependency is in `pom.xml`, that the `dev` profile is active, and that the app was restarted after adding the dependency. A 404 means the console page was not registered; it is different from an H2 login failure.
 
-## 7. Common mistakes
+## 7. Verify the database endpoint
 
-- forgetting `@Id` on the entity
-- forgetting the no-arg constructor
-- forgetting `spring.jpa.defer-datasource-initialization=true`
+With the app running under the `dev` profile:
 
-## 8. Goal for this tutorial
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
+
+Call the books endpoint:
+
+```bash
+curl http://localhost:8080/api/v1/books
+```
+
+You should receive the seeded rows from `data.sql`:
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Effective Java",
+    "author": "Joshua Bloch",
+    "price": 54.99
+  },
+  {
+    "id": 2,
+    "title": "Clean Code",
+    "author": "Robert C. Martin",
+    "price": 42.5
+  },
+  {
+    "id": 3,
+    "title": "The Pragmatic Programmer",
+    "author": "Andrew Hunt",
+    "price": 49.95
+  }
+]
+```
+
+### JPA Architecture Overview
+
+```mermaid
+flowchart LR
+    Service["BookService"] -->|Calls findAll()| Repo["BookRepository<br/>(Spring Data Proxy)"]
+    Repo -->|Executes JPQL / SQL| Hibernate["Hibernate ORM Engine<br/>(JPA Provider)"]
+    Hibernate -->|JDBC Connection| H2["In-Memory H2 DB<br/>(jdbc:h2:mem:bookshop)"]
+```
+
+## 8. Common mistakes
+
+- **Forgetting `@Id` on the entity**: JPA entities must have a primary key field marked with `@Id`.
+- **Forgetting the no-arg constructor**: Hibernate uses reflection to construct empty entity objects before populating fields from the SQL ResultSet.
+- **Forgetting `spring.jpa.defer-datasource-initialization=true`**: Without this setting, Spring Boot attempts to execute `data.sql` before Hibernate auto-generates the database schema tables, causing an `EmbeddedDatabaseException: Table 'BOOK' not found`.
+- **Declaring custom methods named `getAllBooks()` in `JpaRepository`**: Spring Data interprets method names as query creators. Unless you write `@Query`, non-standard method names cause a startup failure (`No property 'getAllBooks' found for type 'Book'`). Use the built-in `findAll()` method instead.
+
+## 9. Goal for this tutorial
 
 By the end of this tutorial, you should understand:
 
 - why JPA maps Java classes to database tables
-- what `JpaRepository` gives you
-- how H2 is used for local development
-- how SQL appears in the logs
+- what `JpaRepository` provides out of the box
+- how an in-memory H2 database runs during development
+- how to inspect runtime database tables and SQL queries via the H2 Console
 
 Next: [**Tutorial 06 — Full CRUD API**](tutorial-06%20%28Full%20CRUD%20API%29.md)
+

@@ -139,4 +139,47 @@ At this point in the course, Spring Boot may include a detailed `trace` in its d
 
 This example assumes you have not yet added authentication in tutorial 15. After tutorial 15, send a valid bearer token too; otherwise security returns `401 Unauthorized` before validation runs.
 
+## 5. How Spring Validation works under the hood
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as HTTP Client
+    participant DS as DispatcherServlet
+    participant Val as Validator (Hibernate Validator)
+    participant Ctrl as BookController
+    participant Svc as BookService
+
+    Client->>DS: POST /api/v1/books with invalid JSON
+    DS->>Val: Intercept @Valid @RequestBody BookRequest
+    Val-->>DS: Validation fails (title blank, price negative)
+    Note over DS: Throws MethodArgumentNotValidException
+    DS-->>Client: HTTP 400 Bad Request
+    Note over Ctrl,Svc: BookController and BookService are NEVER reached!
+```
+
+### Common Jakarta Validation Annotations
+
+| Annotation | Applicable Types | Rule Enforced |
+|---|---|---|
+| `@NotNull` | Any object | Field cannot be `null` (empty strings or empty collections are permitted). |
+| `@NotEmpty` | `String`, `Collection`, `Map` | Field cannot be `null` and its size must be `> 0`. |
+| `@NotBlank` | `String` | Field cannot be `null`, empty, or contain only whitespace. |
+| `@Size(min=X, max=Y)` | `String`, `Collection` | Length or collection size must be within bounds. |
+| `@Positive` | Numeric types | Value must be strictly `> 0`. |
+| `@PositiveOrZero` | Numeric types | Value must be `>= 0`. |
+| `@Digits(integer=X, fraction=Y)` | `BigDecimal`, numbers | Limits max integer digits and max fractional decimal digits. |
+
+> [!NOTE]
+> In Tutorial 10, when we replace the plain text author field with a database entity relationship, `BookRequest` will replace `String author` with `Long authorId` (annotated with `@NotNull` and `@Positive`) and optional `Set<Long> genreIds`.
+
+## 6. Goal for this tutorial
+
+By the end of this tutorial, you should understand:
+
+- why input validation must occur at the API boundary before hitting services or databases
+- how `@Valid` triggers declarative constraints on DTO records
+- how Spring prevents invalid state from ever reaching your domain logic
+
 Next: [**Tutorial 09 — Error handling**](tutorial-09%20%28Error%20handling%29.md)
+

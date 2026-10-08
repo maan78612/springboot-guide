@@ -187,7 +187,7 @@ Start the app:
 SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
-Create a book:
+### 1. Create a new book (POST)
 
 ```bash
 curl -i -X POST http://localhost:8080/api/v1/books \
@@ -195,26 +195,83 @@ curl -i -X POST http://localhost:8080/api/v1/books \
   -d '{"title":"Clean Code","author":"Robert C. Martin","price":42.50}'
 ```
 
-Then use the returned `id` to try:
+Expected HTTP response:
+
+```http
+HTTP/1.1 201 Created
+Location: /api/v1/books/4
+Content-Type: application/json
+
+{"id":4,"title":"Clean Code","author":"Robert C. Martin","price":42.5}
+```
+
+### 2. Read books (GET)
 
 ```bash
 curl http://localhost:8080/api/v1/books
-curl http://localhost:8080/api/v1/books/1
+curl http://localhost:8080/api/v1/books/4
+```
 
-curl -X PUT http://localhost:8080/api/v1/books/1 \
+Expected response for single book:
+
+```json
+{
+  "id": 4,
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "price": 42.5
+}
+```
+
+### 3. Update an existing book (PUT)
+
+```bash
+curl -i -X PUT http://localhost:8080/api/v1/books/4 \
   -H 'Content-Type: application/json' \
   -d '{"title":"Clean Code, Updated","author":"Robert C. Martin","price":45.00}'
+```
 
-curl -i -X DELETE http://localhost:8080/api/v1/books/1
+Expected response:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"id":4,"title":"Clean Code, Updated","author":"Robert C. Martin","price":45.0}
+```
+
+### 4. Delete a book (DELETE)
+
+```bash
+curl -i -X DELETE http://localhost:8080/api/v1/books/4
+```
+
+Expected response:
+
+```http
+HTTP/1.1 204 No Content
 ```
 
 The project adds authentication later, so once tutorial 15 is applied, write requests require a bearer token.
 
-## 5. Remember
+## 5. REST Semantics and HTTP Methods
 
-- Controller: maps HTTP requests to service calls and chooses the HTTP response.
-- Service: performs the operation using the repository.
+| HTTP Method | Idempotent | Safe | Typical Status | Purpose in Bookshop |
+|---|---|---|---|---|
+| `GET` | Yes | Yes | `200 OK` | Fetch all books or a single book by id |
+| `POST` | No | No | `201 Created` | Create a new book; returns `Location` header |
+| `PUT` | Yes | No | `200 OK` | Overwrite/update the book at `{id}` with new values |
+| `DELETE` | Yes | No | `204 No Content` | Remove the book record at `{id}` |
+
+> [!NOTE]
+> `bookRepository.findById(id)` returns a `java.util.Optional<Book>`. If the row is found, it wraps the `Book` entity; otherwise it is empty. Calling `.orElseThrow(...)` extracts the entity or throws an exception if the book does not exist.
+
+## 6. Remember
+
+- Controller: maps HTTP requests to service calls and chooses the HTTP response status.
+- Service: performs the operation using the repository and coordinates business rules.
 - Repository: `JpaRepository` reads and writes database rows.
 - Tutorial 7 replaces direct entity input/output with DTOs; tutorial 9 adds consistent error handling.
 
 Next: [**Tutorial 07 — DTOs and the response envelope**](tutorial-07%20%28DTOs%20and%20the%20response%20envelope%29.md)
+

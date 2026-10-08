@@ -60,6 +60,18 @@ painful. Spring Boot is Spring with the decisions already made:
 +--------------------------+--------------------------------------+
 ```
 
+```mermaid
+flowchart TD
+    Client([HTTP Client / Browser]) -->|HTTP Port 8080| Tomcat["Embedded Tomcat Server"]
+    Tomcat -->|Servlet Request| SpringBoot["Spring Boot Application Context"]
+    subgraph SpringBoot ["Spring Boot Application Context"]
+        DS["DispatcherServlet (Spring MVC)"]
+        Beans["Managed Application Beans<br/>(@RestController, @Service, @Repository)"]
+        DS --> Beans
+    end
+```
+
+
 One term you will meet constantly, defined now:
 
 > A **web server** is a program that listens on a network port,
@@ -213,7 +225,18 @@ never leaks into a real deployment.
 tricks: `./mvnw spring-boot:run` (run the app) and packaging the
 runnable jar (tutorial 17).
 
+### Essential Maven Wrapper Commands
+
+| Command | Action |
+|---|---|
+| `./mvnw clean` | Deletes the `target/` directory and all compiled build artifacts |
+| `./mvnw compile` | Compiles Java source files from `src/main/java` into `target/classes` |
+| `./mvnw test` | Compiles and executes automated unit & integration tests under `src/test/java` |
+| `./mvnw spring-boot:run` | Boots embedded Tomcat on port 8080 and runs the live application |
+| `./mvnw package` | Compiles, runs tests, and packages a standalone executable JAR inside `target/` |
+
 ---
+
 
 ## 5. Run it
 

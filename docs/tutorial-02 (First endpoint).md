@@ -152,11 +152,57 @@ Example:
 - `getTitle()` → `"title"`
 - `getPrice()` → `"price"`
 
+### Request Lifecycle under the Hood
+
+When a client sends an HTTP request, Spring Boot processes it through the following pipeline:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as HTTP Client (curl / browser)
+    participant Tomcat as Embedded Tomcat Server (Port 8080)
+    participant DS as DispatcherServlet (Spring MVC)
+    participant Controller as BookController
+    participant Jackson as Jackson (HttpMessageConverter)
+
+    Client->>Tomcat: GET /api/v1/books
+    Tomcat->>DS: Delegate HttpServletRequest
+    DS->>Controller: Route to getAllBooks()
+    Controller-->>DS: Returns List<Book>
+    DS->>Jackson: Serialize Java objects to JSON
+    Jackson-->>DS: JSON bytes
+    DS-->>Tomcat: HttpServletResponse (200 OK, application/json)
+    Tomcat-->>Client: HTTP/1.1 200 OK + JSON payload
+```
+
+1. **Embedded Tomcat** receives raw network bytes on port 8080, parses the HTTP protocol, and passes the request to the servlet container.
+2. **`DispatcherServlet`** is Spring MVC's central front controller. It inspects all registered `@RequestMapping` paths and routes the URL `/api/v1/books` to `BookController#getAllBooks()`.
+3. **`BookController`** executes your Java method and returns a standard `List<Book>`.
+4. **`MappingJackson2HttpMessageConverter`** intercepts the return value because the class is annotated with `@RestController` (which includes `@ResponseBody`). It discovers getters using reflection (`getId`, `getTitle`, `getAuthor`, `getPrice`) and produces UTF-8 encoded JSON text.
+5. **Tomcat sends the HTTP response**: status `200 OK`, `Content-Type: application/json`, and the serialized body.
+
+You can verify the exact headers using `curl -i`:
+
+```bash
+curl -i http://localhost:8080/api/v1/books
+```
+
+Output:
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: Thu, 08 Oct 2026 12:00:00 GMT
+
+[{"id":1,"title":"Effective Java","author":"Joshua Bloch","price":54.99},{"id":2,"Clean Code","author":"Robert C. Martin","price":42.5}]
+```
+
 ## 5. Common mistakes
 
 - wrong URL: `/books` instead of `/api/v1/books`
-- missing public getter
-- using `double` instead of `BigDecimal` for price
+- missing public getter: Jackson cannot discover private fields without public getters or explicit annotations
+- using `double` or `float` instead of `BigDecimal` for price (floating point rounding causes rounding bugs like `42.50000000000001`)
+- forgetting `@RestController`: using plain `@Controller` without `@ResponseBody` tells Spring to look for an HTML template file instead of returning JSON
 
 ## 6. Goal for this tutorial
 
@@ -165,5 +211,7 @@ By the end of this tutorial, you should understand:
 - how a controller maps a URL
 - how a Java object becomes JSON
 - how `@RestController`, `@RequestMapping`, and `@GetMapping` work together
+- how Spring Boot's internal `DispatcherServlet` delegates to your code
 
 Next: [**Tutorial 03 — Layers and dependency injection.**](tutorial-03%20%28Layers%20and%20dependency%20injection%29.md)
+

@@ -172,12 +172,84 @@ public class ShopController {
 }
 ```
 
-Run the app and request `GET /api/v1/shop` to see the configured values.
+Run the app and request `GET /api/v1/shop` to see the configured values:
 
-## 6. Common mistakes
+```bash
+./mvnw spring-boot:run
+```
 
-- Naming a profile file `application_dev.properties` instead of `application-dev.properties`.
-- Forgetting `@ConfigurationPropertiesScan`.
-- Misspelling a property key.
+In another terminal:
+
+```bash
+curl http://localhost:8080/api/v1/shop
+```
+
+Expected JSON response:
+
+```json
+{
+  "name": "Bookshop",
+  "currency": "USD"
+}
+```
+
+Now restart with the `dev` profile:
+
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
+
+And test again:
+
+```bash
+curl http://localhost:8080/api/v1/shop
+```
+
+Expected JSON response (reflecting `application-dev.properties`):
+
+```json
+{
+  "name": "Bookshop (dev)",
+  "currency": "USD"
+}
+```
+
+## 6. How Spring resolves configuration (Precedence)
+
+Spring evaluates properties in a well-defined order of precedence, where later sources override earlier ones:
+
+```mermaid
+flowchart TD
+    A["4. CLI Arguments (--bookshop.shop-name=...)"] --> B["3. OS Environment Variables (BOOKSHOP_SHOP_NAME=...)"]
+    B --> C["2. Profile-specific files (application-dev.properties)"]
+    C --> D["1. Base default file (application.properties)"]
+```
+
+| Priority | Source | Example Syntax |
+|---|---|---|
+| Highest | Command-line arguments | `--bookshop.currency=CAD` |
+| High | OS environment variables | `BOOKSHOP_CURRENCY=EUR` |
+| Medium | Active profile property files | `application-dev.properties` |
+| Baseline | Default property files | `application.properties` |
+
+> [!NOTE]
+> In Tutorial 10, we will also add nested configuration for catalog pagination (`bookshop.catalog.default-page-size=10` and `bookshop.catalog.max-page-size=100`) by adding a nested static class `Catalog` inside `BookshopProperties`. Spring Boot seamlessly binds nested properties to nested Java objects.
+
+## 7. Common mistakes
+
+- Naming a profile file `application_dev.properties` instead of `application-dev.properties` (must use a hyphen).
+- Forgetting `@ConfigurationPropertiesScan` on the `@SpringBootApplication` class.
+- Misspelling a property key or setter name (Spring maps kebab-case `shop-name` to camelCase `setShopName(...)` via relaxed binding).
+- Forgetting getters and setters: without public getters and setters, Spring cannot bind or read the property values.
+
+## 8. Goal for this tutorial
+
+By the end of this tutorial, you should understand:
+
+- why application configurations are externalized from Java source code
+- how Spring profiles (`dev`, `prod`) override base settings
+- how `@ConfigurationProperties` provides type-safe access to application settings
+- how `@ConfigurationPropertiesScan` discovers typed configuration classes
 
 Next: [**Tutorial 05 — Database and JPA**](tutorial-05%20%28Database%20and%20JPA%29.md)
+

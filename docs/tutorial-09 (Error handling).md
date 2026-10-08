@@ -205,26 +205,44 @@ This advice handles exceptions raised while processing controller requests. Erro
 
 ## 5. Check the responses
 
-Request a book id that does not exist:
+Start the application:
 
-```http
-GET /api/v1/books/999
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
-Response: HTTP `404 Not Found`.
+### 1. Request a book id that does not exist (404 Not Found)
 
-Send invalid values from tutorial 8:
+```bash
+curl -i http://localhost:8080/api/v1/books/999
+```
+
+Response:
 
 ```http
-POST /api/v1/books
+HTTP/1.1 404 Not Found
 Content-Type: application/json
 
-{"title":"","author":"","price":-5}
+{
+  "success": false,
+  "message": "Book with id 999 not found"
+}
 ```
 
-Response: HTTP `400 Bad Request` with field-specific messages:
+### 2. Send invalid values from tutorial 8 (400 Bad Request)
 
-```json
+```bash
+curl -i -X POST http://localhost:8080/api/v1/books \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"","author":"","price":-5}'
+```
+
+Response:
+
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
 {
   "success": false,
   "message": "Validation failed",
@@ -236,4 +254,36 @@ Response: HTTP `400 Bad Request` with field-specific messages:
 }
 ```
 
+## 6. How `@RestControllerAdvice` Works
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as HTTP Client
+    participant DS as DispatcherServlet
+    participant Controller as BookController
+    participant Service as BookService
+    participant Handler as GlobalExceptionHandler (@RestControllerAdvice)
+
+    Client->>DS: GET /api/v1/books/999
+    DS->>Controller: getBookById(999)
+    Controller->>Service: getBookById(999)
+    Service-->>Service: Book not found in repository
+    Service-->>DS: throws ApiException.notFound("Book with id 999 not found")
+    Note over DS: Intercepts unhandled exception
+    DS->>Handler: handleApiException(ex)
+    Handler-->>DS: ResponseEntity.status(404).body(ErrorResponse)
+    DS-->>Client: HTTP 404 Not Found + ErrorResponse JSON
+```
+
+### Exception Strategy Comparison
+
+| Unhandled Exception (Default Spring) | Handled with `@RestControllerAdvice` |
+|---|---|
+| Leaks internal class names and stack traces | Emits clean, human-readable error JSON |
+| Exposes database and library internals to attackers | Shields internal architecture from external callers |
+| Status codes default to 500 or arbitrary errors | Precise semantic HTTP status codes (`400`, `404`, `409`, `500`) |
+| Unpredictable JSON format depending on environment | Uniform contract via standardized `ErrorResponse` DTO |
+
 Next: [**Tutorial 10 — Relationships and queries**](tutorial-10%20%28Relationships%20and%20queries%29.md)
+
