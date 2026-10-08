@@ -16,6 +16,7 @@ public class BookshopProperties {
 
     private String shopName;
     private String currency;
+    private final Catalog catalog = new Catalog();
 
     public String getShopName() {
         return shopName;
@@ -31,5 +32,30 @@ public class BookshopProperties {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public Catalog getCatalog() {
+        return catalog;
+    }
+
+    public static class Catalog {
+        private int defaultPageSize = 10;
+        private int maxPageSize = 100;
+
+        public int getDefaultPageSize() {
+            return defaultPageSize;
+        }
+
+        public void setDefaultPageSize(int defaultPageSize) {
+            this.defaultPageSize = defaultPageSize;
+        }
+
+        public int getMaxPageSize() {
+            return maxPageSize;
+        }
+
+        public void setMaxPageSize(int maxPageSize) {
+            this.maxPageSize = maxPageSize;
+        }
     }
 }

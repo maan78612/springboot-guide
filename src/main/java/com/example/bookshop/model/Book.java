@@ -1,23 +1,37 @@
 package com.example.bookshop.model;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.hibernate.annotations.BatchSize;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 
 /**
  * JPA mapping from the Book class to a database row.
  *
- * | Key / Annotation               | Why we use it                                  |
- * |--------------------------------|------------------------------------------------|
- * | @Entity                        | Marks Book as a persisted database entity      |
- * | @Id                            | Identifies the primary key                     |
- * | @GeneratedValue(IDENTITY)      | Lets the database generate the id              |
- * | @Column(precision=10, scale=2) | Stores the price with two decimal places       |
- * | protected no-arg constructor   | Allows JPA to instantiate rows from the database|
+ * | Key / Annotation          | Why we use it                                  |
+ * |---------------------------|------------------------------------------------|
+ * | @ManyToOne                 | Many books can reference one author            |
+ * | FetchType.LAZY             | Loads the author when the application accesses it|
+ * | optional = false           | Requires each book to have an author           |
+ * | @JoinColumn(author_id)     | Stores the author foreign key on the book row  |
+ * | @ManyToMany                | Allows each book to have multiple genres       |
+ * | @BatchSize(50)             | Batches lazy genre loading for up to 50 books  |
+ * | @JoinTable(book_genre)     | Stores book/genre links in a separate table    |
+ * | joinColumns                | Names the link table column for the Book side  |
+ * | inverseJoinColumns        | Names the link table column for the Genre side |
+ * | Set / HashSet              | Avoids duplicate genres and starts non-null    |
  */
 @Entity
 public class Book {
@@ -27,7 +41,18 @@ public class Book {
     private Long id;
 
     private String title;
-    private String author;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "author_id")
+    private Author author;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @BatchSize(size = 50)
+    @JoinTable(
+            name = "book_genre",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id"))
+    private Set<Genre> genres = new HashSet<>();
 
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
@@ -38,7 +63,7 @@ public class Book {
     protected Book() {
     }
 
-    public Book(String title, String author, BigDecimal price) {
+    public Book(String title, Author author, BigDecimal price) {
         this.title = title;
         this.author = author;
         this.price = price;
@@ -56,12 +81,20 @@ public class Book {
         this.title = title;
     }
 
-    public String getAuthor() {
+    public Author getAuthor() {
         return author;
     }
 
-    public void setAuthor(String author) {
+    public void setAuthor(Author author) {
         this.author = author;
+    }
+
+    public Set<Genre> getGenres() {
+        return genres;
+    }
+
+    public void setGenres(Set<Genre> genres) {
+        this.genres = genres;
     }
 
     public BigDecimal getPrice() {

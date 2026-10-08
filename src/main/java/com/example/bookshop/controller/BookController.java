@@ -1,8 +1,10 @@
 package com.example.bookshop.controller;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,34 +13,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bookshop.dto.ApiResponse;
 import com.example.bookshop.dto.BookRequest;
 import com.example.bookshop.dto.BookResponse;
+import com.example.bookshop.dto.PageMeta;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.service.BookService;
 
 import jakarta.validation.Valid;
 
 /**
- * Book REST endpoints using request/response DTOs, response envelope, and validation.
- *
- * | Method | Endpoint             | Status | Description                    |
- * |--------|----------------------|--------|--------------------------------|
- * | GET    | /api/v1/books        | 200    | Return enveloped book list     |
- * | GET    | /api/v1/books/{id}   | 200    | Return one enveloped book      |
- * | POST   | /api/v1/books        | 201    | Validate and create a book     |
- * | PUT    | /api/v1/books/{id}   | 200    | Validate and update a book     |
- * | DELETE | /api/v1/books/{id}   | 200    | Delete a book                  |
- *
- * | Key                | Explanation                                      |
- * |--------------------|--------------------------------------------------|
- * | @Valid             | Checks BookRequest constraints before method     |
- * | @RequestBody       | Converts JSON into BookRequest                   |
- * | @PathVariable      | Binds {id} from the URL to a method parameter    |
- * | ResponseEntity     | Sets create status and Location header           |
- * | ApiResponse        | Gives responses a consistent JSON body           |
+ * Book REST endpoints with query filtering, pagination, and response envelope.
  */
 @RestController
 @RequestMapping("/api/v1/books")
@@ -51,12 +39,22 @@ public class BookController {
     }
 
     @GetMapping
-    public ApiResponse<List<BookResponse>> getAllBooks() {
-        List<BookResponse> books = bookService.getAllBooks().stream()
+    public ApiResponse<List<BookResponse>> getAllBooks(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long authorId,
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) Integer limit) {
+        Page<Book> result = bookService.getBooks(
+                search, authorId, genreId, minPrice, maxPrice, sort, page, limit);
+        List<BookResponse> books = result.getContent().stream()
                 .map(BookResponse::from)
                 .toList();
 
-        return ApiResponse.ok("Books fetched", books);
+        return ApiResponse.ok("Books fetched", books, PageMeta.from(result));
     }
 
     @GetMapping("/{id}")
