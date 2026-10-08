@@ -38,6 +38,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+/**
+ * Application entry point with configuration properties scanning.
+ *
+ * | Key                           | Why we use it                                  |
+ * |-------------------------------|------------------------------------------------|
+ * | @SpringBootApplication        | Enables bootstrapping and component scanning  |
+ * | @ConfigurationPropertiesScan | Registers typed settings classes as beans      |
+ */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class BookshopApplication {

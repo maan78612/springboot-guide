@@ -26,7 +26,26 @@ import com.example.bookshop.service.BookService;
 import jakarta.validation.Valid;
 
 /**
- * Book REST endpoints with query filtering, pagination, and response envelope.
+ * REST endpoints for creating, reading, updating, and deleting books with pagination and filtering.
+ *
+ * | Method | Endpoint           | Status | Description                                |
+ * |--------|--------------------|--------|--------------------------------------------|
+ * | GET    | /api/v1/books      | 200    | List books with pagination and search/sort |
+ * | GET    | /api/v1/books/{id} | 200    | Fetch one book by ID                       |
+ * | POST   | /api/v1/books      | 201    | Validate and create; return Location header|
+ * | PUT    | /api/v1/books/{id} | 200    | Validate and update a book                 |
+ * | DELETE | /api/v1/books/{id} | 200    | Delete a book                              |
+ *
+ * | Key            | Explanation                                               |
+ * |----------------|-----------------------------------------------------------|
+ * | @RestController| Handles HTTP requests and serializes return data to JSON  |
+ * | @RequestMapping| Sets the shared URL prefix                                |
+ * | @RequestBody   | Converts JSON into BookRequest                            |
+ * | @PathVariable  | Binds {id} from the URL to a method parameter             |
+ * | @RequestParam  | Reads optional filters and paging from the query string   |
+ * | @Valid         | Validates BookRequest constraints before method execution |
+ * | ResponseEntity | Sets create status and Location header                    |
+ * | ApiResponse    | Wraps response data in a standard envelope                |
  */
 @RestController
 @RequestMapping("/api/v1/books")

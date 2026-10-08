@@ -20,18 +20,20 @@ import jakarta.persistence.ManyToOne;
 /**
  * JPA mapping from the Book class to a database row.
  *
- * | Key / Annotation          | Why we use it                                  |
- * |---------------------------|------------------------------------------------|
- * | @ManyToOne                 | Many books can reference one author            |
+ * | Key / Annotation          | Why we use it                                     |
+ * |----------------------------|--------------------------------------------------|
+ * | @Entity                    | Maps Book objects to database rows               |
+ * | @ManyToOne                 | Many books can reference one author              |
  * | FetchType.LAZY             | Loads the author when the application accesses it|
- * | optional = false           | Requires each book to have an author           |
- * | @JoinColumn(author_id)     | Stores the author foreign key on the book row  |
- * | @ManyToMany                | Allows each book to have multiple genres       |
- * | @BatchSize(50)             | Batches lazy genre loading for up to 50 books  |
- * | @JoinTable(book_genre)     | Stores book/genre links in a separate table    |
- * | joinColumns                | Names the link table column for the Book side  |
- * | inverseJoinColumns        | Names the link table column for the Genre side |
- * | Set / HashSet              | Avoids duplicate genres and starts non-null    |
+ * | optional = false           | Requires each book to have an author             |
+ * | @JoinColumn(author_id)     | Stores the author foreign key on the book row    |
+ * | @ManyToMany                | Allows each book to have multiple genres         |
+ * | @BatchSize(50)             | Batches lazy genre loading for up to 50 books    |
+ * | @JoinTable(book_genre)     | Stores book/genre links in a separate table      |
+ * | joinColumns                | Names the link table column for the Book side    |
+ * | inverseJoinColumns         | Names the link table column for the Genre side   |
+ * | Set / HashSet              | Avoids duplicate genres and starts non-null      |
+ * | @SoftDelete(columnName=...) | Marks rows instead of physically removing them   |
  */
 @Entity
 public class Book {
@@ -48,10 +50,7 @@ public class Book {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @BatchSize(size = 50)
-    @JoinTable(
-            name = "book_genre",
-            joinColumns = @JoinColumn(name = "book_id"),
-            inverseJoinColumns = @JoinColumn(name = "genre_id"))
+    @JoinTable(name = "book_genre", joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
     private Set<Genre> genres = new HashSet<>();
 
     @Column(precision = 10, scale = 2)

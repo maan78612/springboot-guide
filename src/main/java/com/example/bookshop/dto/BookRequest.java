@@ -9,6 +9,20 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Validation rules and allowed fields for BookRequest.
+ *
+ * | Key / Constraint | Field    | Explanation                                         |
+ * |------------------|----------|-----------------------------------------------------|
+ * | @NotBlank        | title    | Rejects null, empty "", or whitespace-only values   |
+ * | @Size(max = 200) | title    | Limits the title to at most 200 characters          |
+ * | @NotNull         | authorId | References an existing author id                    |
+ * | @Positive        | authorId | Rejects zero or negative author ids                 |
+ * | genreIds         | genreIds | Optional set of genre foreign key IDs               |
+ * | @NotNull         | price    | Rejects a missing or null price                     |
+ * | @Positive        | price    | Price must be greater than 0                        |
+ * | @Digits(8, 2)    | price    | Up to 8 digits before and 2 after the decimal point |
+ */
 public record BookRequest(
         @NotBlank(message = "title is required")
         @Size(max = 200, message = "title must be at most 200 characters")

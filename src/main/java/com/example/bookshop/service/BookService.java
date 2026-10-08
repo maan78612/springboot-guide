@@ -22,6 +22,19 @@ import com.example.bookshop.repository.AuthorRepository;
 import com.example.bookshop.repository.BookRepository;
 import com.example.bookshop.repository.GenreRepository;
 
+/**
+ * Book service handling business logic, validation, and data mapping.
+ *
+ * | Key                   | Why we use it                                       |
+ * |-----------------------|-----------------------------------------------------|
+ * | @Service              | Registers business logic in the Spring context      |
+ * | constructor injection | Wires required repositories and properties          |
+ * | getBooks              | Implements filtered search with allow-listed sort   |
+ * | PageRequest           | Converts page, size, and sort into a pageable query |
+ * | SORTABLE_FIELDS       | Whitelists allowed sort fields                      |
+ * | resolveAuthor         | Verifies and fetches related Author entity          |
+ * | resolveGenres         | Verifies and fetches related Genre entities         |
+ */
 @Service
 public class BookService {
 

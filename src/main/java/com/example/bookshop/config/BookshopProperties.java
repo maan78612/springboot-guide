@@ -5,11 +5,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Typed Java representation of the bookshop settings.
  *
- * | Key / Annotation         | Why we use it                                    |
- * |--------------------------|--------------------------------------------------|
- * | @ConfigurationProperties | Binds bookshop.* values to these fields          |
- * | shopName / currency       | Hold configured values used by the application  |
- * | getters and setters       | Allow Spring's property binder to read and write |
+ * | Key / Annotation         | Why we use it                                     |
+ * |--------------------------|---------------------------------------------------|
+ * | @ConfigurationProperties | Binds bookshop.* values to these fields           |
+ * | shopName / currency      | Hold configured values used by the application   |
+ * | Catalog                  | Groups page-size configuration under bookshop.*   |
+ * | getters and setters      | Allow Spring's property binder to read and write  |
  */
 @ConfigurationProperties(prefix = "bookshop")
 public class BookshopProperties {
