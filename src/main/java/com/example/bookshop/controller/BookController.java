@@ -19,19 +19,22 @@ import com.example.bookshop.dto.BookResponse;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.service.BookService;
 
+import jakarta.validation.Valid;
+
 /**
- * Book REST endpoints using request/response DTOs and a response envelope.
+ * Book REST endpoints using request/response DTOs, response envelope, and validation.
  *
  * | Method | Endpoint             | Status | Description                    |
  * |--------|----------------------|--------|--------------------------------|
  * | GET    | /api/v1/books        | 200    | Return enveloped book list     |
  * | GET    | /api/v1/books/{id}   | 200    | Return one enveloped book      |
- * | POST   | /api/v1/books        | 201    | Create; include Location       |
- * | PUT    | /api/v1/books/{id}   | 200    | Update a book                  |
+ * | POST   | /api/v1/books        | 201    | Validate and create a book     |
+ * | PUT    | /api/v1/books/{id}   | 200    | Validate and update a book     |
  * | DELETE | /api/v1/books/{id}   | 200    | Delete a book                  |
  *
  * | Key                | Explanation                                      |
  * |--------------------|--------------------------------------------------|
+ * | @Valid             | Checks BookRequest constraints before method     |
  * | @RequestBody       | Converts JSON into BookRequest                   |
  * | @PathVariable      | Binds {id} from the URL to a method parameter    |
  * | ResponseEntity     | Sets create status and Location header           |
@@ -64,7 +67,8 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<BookResponse>> createBook(@RequestBody BookRequest request) {
+    public ResponseEntity<ApiResponse<BookResponse>> createBook(
+            @Valid @RequestBody BookRequest request) {
         Book saved = bookService.createBook(request);
         URI location = URI.create("/api/v1/books/" + saved.getId());
 
@@ -73,8 +77,9 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<BookResponse> updateBook(@PathVariable Long id,
-            @RequestBody BookRequest request) {
+    public ApiResponse<BookResponse> updateBook(
+            @PathVariable Long id,
+            @Valid @RequestBody BookRequest request) {
         return ApiResponse.ok("Book updated",
                 BookResponse.from(bookService.updateBook(id, request)));
     }
