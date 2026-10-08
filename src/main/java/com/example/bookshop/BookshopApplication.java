@@ -26,13 +26,20 @@
 
  * Without the web starter this main method would run and the program would just end,
  * like any Java program. The web server is what keeps it running.
+
+ ^ TUTORIAL 04
+ ? @ConfigurationPropertiesScan finds classes annotated with
+ ? @ConfigurationProperties (our BookshopProperties) and registers
+ ? them as beans, the same way component scan finds @Component.
 */
 package com.example.bookshop;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
+@ConfigurationPropertiesScan
 public class BookshopApplication {
 
 	public static void main(String[] args) {
