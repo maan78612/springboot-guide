@@ -8,13 +8,14 @@ import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.BookRepository;
 
 /**
- * Service layer that delegates book reads to the repository.
+ * Book CRUD operations between the controller and repository.
  *
- * | Key                    | Why we use it                                   |
- * |------------------------|-------------------------------------------------|
- * | @Service               | Registers this class as application logic       |
- * | final repository field | Makes the dependency required and immutable     |
- * | constructor injection  | Lets Spring provide the repository              |
+ * | Key          | Why we use it                                  |
+ * |--------------|------------------------------------------------|
+ * | @Service     | Registers business logic in the Spring context |
+ * | findById     | Loads an existing book before update/delete     |
+ * | save         | Inserts a new book or persists changes          |
+ * | delete       | Removes the selected book at this stage         |
  */
 @Service
 public class BookService {
@@ -27,5 +28,27 @@ public class BookService {
 
     public List<Book> getAllBooks() {
         return bookRepository.findAll();
+    }
+
+    public Book getBookById(Long id) {
+        return bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found: " + id));
+    }
+
+    public Book createBook(Book book) {
+        return bookRepository.save(book);
+    }
+
+    public Book updateBook(Long id, Book changes) {
+        Book book = getBookById(id);
+        book.setTitle(changes.getTitle());
+        book.setAuthor(changes.getAuthor());
+        book.setPrice(changes.getPrice());
+        return bookRepository.save(book);
+    }
+
+    public void deleteBook(Long id) {
+        Book book = getBookById(id);
+        bookRepository.delete(book);
     }
 }
