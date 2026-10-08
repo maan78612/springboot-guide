@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.example.bookshop.dto.BookRequest;
+import com.example.bookshop.exception.ApiException;
 import com.example.bookshop.model.Book;
 import com.example.bookshop.repository.BookRepository;
 
@@ -33,7 +34,7 @@ public class BookService {
 
     public Book getBookById(Long id) {
         return bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found: " + id));
+                .orElseThrow(() -> ApiException.notFound("Book with id " + id + " not found"));
     }
 
     public Book createBook(BookRequest request) {
